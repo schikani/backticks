@@ -30,7 +30,7 @@ char *str_new(_str_ptr_t *_str_ptr, char *str)
 
 char *str_cat(char *dest, char *from)
 {
-    dest = (char *)realloc(dest, sizeof(char)*strlen(from));
+    dest = (char *)realloc(dest, sizeof(char)*(strlen(from) + strlen(dest)));
     strcat(dest, from);
 
     return dest;
@@ -48,13 +48,13 @@ int main(int argc, char *argv[])
     _str_ptr_t str;
     str.strs_ptr_len = 0;
     char *s = str_new(&str, "STRING START");
-    // char *str1 = str_new(&s, "ONE");
-    // char *str2 = str_new(&s, "TWO");
-    // char *str3 = str_new(&s, "THREE");
-    // char *str4 = str_new(&s, "FOUR");
-    // char *str5 = str_new(&s, "FIVE");   
-    // char *str6 = str_new(&s, "SIX");
-    // char *str7 = str_new(&s, "SEVEN");
+    // char *str1 = str_new(&str, "ONE");
+    // char *str2 = str_new(&str, "TWO");
+    // char *str3 = str_new(&str, "THREE");
+    // char *str4 = str_new(&str, "FOUR");
+    // char *str5 = str_new(&str, "FIVE");   
+    // char *str6 = str_new(&str, "SIX");
+    // char *str7 = str_new(&str, "SEVEN");
     for (int i = 0; i < 200; ++i)
     {
         str_cat(s, "-");
@@ -68,7 +68,6 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-
 
 
 

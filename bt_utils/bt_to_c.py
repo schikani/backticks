@@ -7,8 +7,9 @@ import os
 class BT_to_C(BT_Grammar):
     def __init__(self, bt_file_name):
         super().__init__(bt_file_name)
-        make_header(self.h_file_name, [])
-        make_source(self.c_file_name, list(self._vars_dict["FUNCS"].keys()), self._convert_to_c_str(), 0)
+        # print(self._func_list)
+        make_source(self.c_file_name, self._private_func_list, list(self._vars_dict["FUNCS"].keys()), self._convert_to_c_str(), 0)
+        make_header(self.h_file_name, self._public_func_list)
         
 
     def compile(self, compiler_path):

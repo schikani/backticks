@@ -30,6 +30,7 @@ RIGHTBRACK      =     ')'
 LEFTSQUARE      =     '['
 RIGHTSQUARE     =     ']'
 FUNCTION        =     '@'
+PUB_FUNC        =     '<'
 QUOTE           =     '"'
 TICK            =     '`'
 

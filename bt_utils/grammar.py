@@ -8,6 +8,9 @@ class BT_Grammar(Tokenizer):
     def __init__(self, bt_file_name):
         super().__init__(bt_file_name)
         self._vars_dict = dict()
+        self._private_func_list = []
+        self._public_func_list = []
+
 
 
         '''
@@ -252,8 +255,7 @@ class BT_Grammar(Tokenizer):
                         if t == LET:
                             c_str += self.__let(vars_dict, toks[idx+1:])
 
-                    
-                elif t == FUNCTION:
+                elif t == FUNCTION or t == PUB_FUNC:
                     current_func = toks[idx+1]
                     if not current_func in self._vars_dict["FUNCS"]:
                         self._vars_dict["FUNCS"].update({current_func: [(), {}]})
@@ -272,9 +274,11 @@ class BT_Grammar(Tokenizer):
                         elif return_type == STR:
                             ret_val = ""
                         
-                        print(return_type, ret_val)
+                        # print(return_type, ret_val)
                         self._vars_dict["FUNCS"][current_func][0] = (ret_val, return_type)
 
+
+                        c_func_params = ""
 
                         # Extract param vars and types
                         _idx = 0
@@ -294,25 +298,22 @@ class BT_Grammar(Tokenizer):
                         
                             # print(var, _type, val)
                             self._vars_dict["FUNCS"][current_func][1][var] = (val, _type)
+                            c_func_params += f"{_type} {var}"
 
-                            _idx += 3
-                        
-                        '''
-                            EXAMPLE
-                            print(self._vars_dict["FUNCS"][current_func])
+                            # To exclude comma after last param
+                            if _idx < len(params) - 3:
+                                c_func_params += ", "
+                            _idx += 3               
 
-                            [('0', 'int'), {'num1': ('0', 'int'), 'num2': ('0', 'int')}]
-                        '''
-                        
+                        # print(c_func_params)
+
+                        # print(f"{return_type} {current_func}({c_func_params});")
+                        if t == FUNCTION:
+                            self._private_func_list.append(f"{return_type} {current_func}({c_func_params});")
+                        elif t == PUB_FUNC:
+                            self._public_func_list.append(f"{return_type} {current_func}({c_func_params});")
                             
-
-                        # print(params)
-                        # print(return_type)
-
                         
-
-
-
                     # self._convert_to_c_str(self._vars_dict["FUNCS"][current_func])
                 
                 elif t == PRINT:

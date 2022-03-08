@@ -71,16 +71,23 @@ class Tokenizer(Lexer):
                 #     left = right
 
                 # When string is found
+
                 
                 if buf[right] == TICK:
                     # left = right
+
                     right += 1
-                    while (buf[right] != TICK and right < length):
+
+                    while right < length:
+                        if buf[right] == TICK and buf[right-1] != BACKSLASH:
+                            break
                         right += 1
                     right += 1
-                    # if buf[right]
 
                     sub_str = self.sub_string(buf, left, right)
+
+                    # Replace "\`" with "`"
+                    sub_str = sub_str.replace(BACKTICK, TICK)
                     # print(sub_str)
                     # print("\n")
                     tokens.append(sub_str)
@@ -121,7 +128,7 @@ class Tokenizer(Lexer):
 
         count = 0
         while (count < len(tokens)):
-            if tokens[count] == FUNCTION:
+            if tokens[count] == FUNCTION or tokens[count] == PUB_FUNC:
                 funcs = []
                 while tokens[count] != RIGHTCURL:
                     funcs.append(tokens[count])
