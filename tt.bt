@@ -1,0 +1,44 @@
+# TODO 
+let c = `Hi!, `;
+c += `how are you today?`;
+let d: str;
+d += `I am fine, thanks`
+#
+
+@ person(name: str, age: int): str
+{
+    return name + " | " + age;
+}
+
+
+#
+@ func(a: int, b: int): int
+{
+    let count = 0;
+    
+    loop
+    (
+        if (count == 7 or count == 6)
+        ```
+            printl(`<-[count]->`);
+        ```
+
+        elif (count == 8)
+        ```
+            printl(`~~~~~`);
+            printl(`<-[count]->`);
+        ```
+
+        if (count <= 9)
+            count += 1;
+        
+        else
+            break;
+
+        printl(`[count]`);
+
+    )
+
+    return count;
+}
+#
