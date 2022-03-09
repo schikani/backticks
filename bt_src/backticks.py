@@ -13,7 +13,7 @@ argc = len(sys.argv)
 argv = sys.argv[1:]
 
 src = BT_to_C(argv[0])
-# print(src.tokens)
+print(src.tokens)
 
 
 src.compile("gcc")

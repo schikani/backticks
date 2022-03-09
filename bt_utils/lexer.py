@@ -31,7 +31,7 @@ class Lexer:
     def is_operator(self, ch):
         if ch == ADD or ch == SUB or ch == MUL or\
         ch == DIV or ch == G_THAN or ch == S_THAN or\
-        ch == EQUALS or ch == COLON:
+        ch == EQUALS or ch == COLON or ch == COMA:
             return True
         else:
             return False
