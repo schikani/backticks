@@ -1,0 +1,9 @@
+@ add(num1: float, num2: float): float
+{
+    return num1 + num2;
+}
+
+# TODO: Get correct function return type when using let
+let sum = add(1, 2);
+
+printl(`sum = [sum]`);

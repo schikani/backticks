@@ -3,7 +3,7 @@
 # from bt_utils import BT_to_C
 
 import sys
-
+import pprint
 # Include backticks module
 sys.path.insert(1, '../')
 from bt_utils import BT_to_C
@@ -13,7 +13,8 @@ argc = len(sys.argv)
 argv = sys.argv[1:]
 
 src = BT_to_C(argv[0])
-print(src.tokens)
+# print(src.tokens)
+# pprint.pprint(src._vars_dict)
 
 
 src.compile("gcc")

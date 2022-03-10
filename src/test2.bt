@@ -1,0 +1,11 @@
+let a = -1.9;
+let b = 10.0;
+
+< add(): int
+{
+    let y = a + b;
+    printl(`a + b = [y]`);
+    return y;
+}
+
+let c = add();

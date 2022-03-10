@@ -1,12 +1,21 @@
-def make_header(header_file_name, funcs_list):
+from ._tokens import *
+
+def make_header(header_file_name, funcs_list, global_vars_list):
 
     funcs = ""
+    global_vars = ""
+
+    for var in global_vars_list:
+        global_vars += var + SEMI + NEWLINE
 
     for f in funcs_list:
         funcs += f + "\n"
     
+    header_file_name = header_file_name.replace("/", "_")
+    
     header_f_n = ("_" + header_file_name.strip(".h") + "_h_").upper()
 
+    _struct_name = header_file_name.strip(".h")
     
     header = f"""#ifndef {header_f_n}
 #define {header_f_n}
@@ -16,6 +25,14 @@ def make_header(header_file_name, funcs_list):
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
+
+typedef struct
+{{
+
+{global_vars}
+}} {header_f_n}VARS;
+
+{header_f_n}VARS {_struct_name};
 
 {funcs}
 #endif
@@ -34,6 +51,8 @@ def make_source(src_file_name, func_defs, funcs_list, main_body, _return):
     
     for f in func_defs:
         f_defs += f + "\n"
+
+    src_file_name = src_file_name.replace("/", "_")
 
     header_f_n = src_file_name.strip(".c") + ".h"
 

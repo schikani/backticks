@@ -46,6 +46,7 @@ S_THAN      =          '<'
 
 # POW             "**"
 
+VOID        =    "void"
 LONG        =    "long"
 DOUBLE      =    "double"
 

@@ -5,7 +5,7 @@ class Tokenizer(Lexer):
     def __init__(self, bt_file_name):
         super().__init__()
         self.bt_file_name = bt_file_name
-        self.bin_name = self.bt_file_name.strip(".bt")
+        self.bin_name = self.bt_file_name[:self.bt_file_name.find(".bt")]
         self.c_file_name = self.bin_name + ".c"
         self.h_file_name = self.bin_name + ".h"
         self.tokens = []
