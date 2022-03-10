@@ -1,11 +1,12 @@
-let a = -1.9;
-let b = 10.0;
+let num1 = 5.134;
+let num2 = 8.0;
+#let _sum = 1;
 
-< add(): int
+< add(): float
 {
-    let y = a + b;
-    printl(`a + b = [y]`);
-    return y;
+    let sum = num1 + num2;
+    return sum;
 }
 
-let c = add();
+let sum = add();
+printl(`sum = [sum]`);

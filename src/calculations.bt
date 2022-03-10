@@ -1,0 +1,28 @@
+let PI = 3.141592653589793238;
+let _power = 0.0;
+let _freq = 0.0;
+
+#--------------------------
+# Calculate Power in (watt)
+#--------------------------
+@ power_watt(I: float, R: float): float
+{
+    return pow(I, 2) * R;
+}
+
+
+#-------------------------------
+# Calculate Resonance Frequency
+#-------------------------------
+@ freq(L: float, C: float): float
+{
+    let freq = 1 / (2 * PI * sqrt(L * C));
+    return freq;
+}
+
+
+_power = power_watt(2, 45);
+printl(`POWER (watt): [_power]`);
+
+_freq = freq(1, 2);
+printl(`FREQ (Hz): [_freq]`);

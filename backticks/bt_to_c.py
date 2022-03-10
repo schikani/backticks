@@ -1,4 +1,4 @@
-from bt_utils.c_templates import make_source
+from .c_templates import make_source
 from ._tokens import *
 from .grammar import BT_Grammar
 from .c_templates import *

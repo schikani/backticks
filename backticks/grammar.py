@@ -23,19 +23,110 @@ class BT_Grammar(Tokenizer):
         
                       FUNCTION VARIABLES
             {
-               "func1": {
-                        "var1": [val, type],
-                        "var2": [val, type],
-                },
+               "func1": [
+                   (ret_val, ret_type), 
+                {
+                    "var1": [val, type],
+                    "var2": [val, type],
+                }],
 
-                "func2": {
+                "func2": [
+                        (ret_val, ret_type),
+                {
                         "var1": [val, type],
                         "var2": [val, type],
-                }
+                }]
             }
         '''
         self._vars_dict["GLOBALS"] = {"global_vars": {}}
         self._vars_dict["FUNCS"] = {}
+
+
+    def __eval_assign_values(self, vars_dict, tok_list, _global_call):
+        float_found = False
+        str_found = False
+        int_found = False
+        val = ""
+        _type = ""
+        _val_idx = 0
+
+        while (tok_list[_val_idx] != SEMI):
+
+            v = tok_list[_val_idx]
+            if v in [ADD, SUB, MUL, DIV]:
+                val += v
+
+            elif v in [LEFTBRACK, RIGHTBRACK]:
+                val += v
+
+            
+            elif v in vars_dict.keys() or v in self._vars_dict["FUNCS"].keys():
+
+                # Check for function variable name
+                if v in vars_dict.keys():
+                    if _global_call:
+                        val += self.bin_name + DOT + v
+
+                    else:
+                        val += v
+
+                    if vars_dict[v][1] == DOUBLE:
+                        float_found = True
+
+                    elif vars_dict[v][1] == LONG:
+                        int_found = True
+
+                    elif vars_dict[v][1] == STR:
+                        str_found = True
+                
+                # Check for function name
+                elif v in self._vars_dict["FUNCS"].keys():
+                    val += v
+
+                    if self._vars_dict["FUNCS"][v][0][1] == DOUBLE:
+                        float_found = True
+
+                    elif self._vars_dict["FUNCS"][v][0][1] == LONG:
+                        int_found = True
+
+                    elif self._vars_dict["FUNCS"][v][0][1] == STR:
+                        str_found = True
+
+            
+            elif v in self._vars_dict["GLOBALS"]["global_vars"].keys():
+
+                val += self.bin_name + DOT + v
+                if self._vars_dict["GLOBALS"]["global_vars"][v][1] == DOUBLE:
+                    float_found = True
+
+                elif self._vars_dict["GLOBALS"]["global_vars"][v][1] == LONG:
+                    int_found = True
+
+                elif self._vars_dict["GLOBALS"]["global_vars"][v][1] == STR:
+                    str_found = True
+
+            elif self.is_float(v):
+                val += v
+                float_found = True
+            elif self.is_int(v):
+                val += v
+                int_found = True
+            elif self.is_string(v):
+                val += v
+                str_found = True
+
+            _val_idx += 1
+
+        if float_found:
+            # print("DOUBLE")
+            _type = DOUBLE
+        elif int_found:
+            # print("INT")
+            _type = LONG
+        elif str_found:
+            _type = STR
+        
+        return (val, _type)
 
     # TODO
     '''
@@ -57,67 +148,7 @@ class BT_Grammar(Tokenizer):
 
             if assign == EQUALS:
 
-                float_found = False
-                str_found = False
-                int_found = False
-                values = tok_list[2:]
-                # print(values)
-                _val_idx = 0
-
-                while (values[_val_idx] != SEMI):
-
-                    v = values[_val_idx]
-                    if v in [ADD, SUB, MUL, DIV]:
-                        val += values[_val_idx]
-
-                    elif v in [LEFTBRACK, RIGHTBRACK]:
-                        val += values[_val_idx]
-
-                    elif v in vars_dict.keys():
-                        if _global_call:
-                            val += self.bin_name + DOT + values[_val_idx]
-                        else:
-                            val += values[_val_idx]
-
-                        if vars_dict[v][1] == DOUBLE:
-                            float_found = True
-
-                        elif vars_dict[v][1] == LONG:
-                            int_found = True
-
-                        elif vars_dict[v][1] == STR:
-                            str_found = True
-
-                    # Check again if variable exist in globals dict
-                    elif v in self._vars_dict["GLOBALS"]["global_vars"].keys():
-                        val += self.bin_name + DOT + values[_val_idx]
-                        if self._vars_dict["GLOBALS"]["global_vars"][v][1] == DOUBLE:
-                            float_found = True
-
-                        elif self._vars_dict["GLOBALS"]["global_vars"][v][1] == LONG:
-                            int_found = True
-
-                        elif self._vars_dict["GLOBALS"]["global_vars"][v][1] == STR:
-                            str_found = True
-
-                    elif self.is_float(v):
-                        val += values[_val_idx]
-                        float_found = True
-                    elif self.is_int(v):
-                        val += values[_val_idx]
-                        int_found = True
-                    elif self.is_string(v):
-                        val += values[_val_idx]
-                        str_found = True
-
-                    _val_idx += 1
-
-                if float_found:
-                    _type = DOUBLE
-                elif int_found:
-                    _type = LONG
-                elif str_found:
-                    _type = STR
+                val, _type = self.__eval_assign_values(vars_dict, tok_list[2:], _global_call)
 
                 vars_dict[var].append(val)
                 vars_dict[var].append(_type)
@@ -258,42 +289,11 @@ class BT_Grammar(Tokenizer):
 
     def __return(self, vars_dict, tok_list):
 
-        ret_val = tok_list[0]
+        ret_val, _type = self.__eval_assign_values(vars_dict, tok_list, False)
 
-        # Check if the variable is already defined
-        if ret_val in vars_dict.keys() or self.is_int(ret_val) or self.is_float(ret_val):
+        ret_val = RETURN + SPACE + ret_val + SEMI
 
-            values = tok_list[1:]
-
-            _val_idx = 0
-
-            while (values[_val_idx] != SEMI):
-
-                v = values[_val_idx]
-                if v in [ADD, SUB, MUL, DIV]:
-                    ret_val += values[_val_idx]
-
-                elif v in [LEFTBRACK, RIGHTBRACK]:
-                    ret_val += values[_val_idx]
-
-                elif v in vars_dict.keys():
-                    ret_val += values[_val_idx]
-
-
-                elif self.is_float(v):
-                    ret_val += values[_val_idx]
-
-                elif self.is_int(v):
-                    ret_val += values[_val_idx]
-
-                elif self.is_string(v):
-                    ret_val += values[_val_idx]
-
-                _val_idx += 1
-
-            ret_val = RETURN + SPACE + ret_val + SEMI
-
-            return ret_val
+        return ret_val
 
     def __string_parser(self, string, vars_dict, _global_call, new_line=False):
 
@@ -388,6 +388,14 @@ class BT_Grammar(Tokenizer):
                     current_func = toks[idx+1]
                     self.__func(current_func, toks[idx:toks.index(RIGHTCURL)+1])
                     break
+                    
+                elif t in vars_dict.keys() and toks[idx+1] == EQUALS:
+                    val, _type = self.__eval_assign_values(vars_dict, toks[2:toks.index(SEMI)+1], _global_call)
+                    if _global_call:
+                        c_str += self.bin_name + DOT + t + EQUALS + val + SEMI + NEWLINE
+                    else:
+                        c_str += t + EQUALS + val + SEMI + NEWLINE
+
 
                 elif t == PRINT:
                     c_str += self.__print(vars_dict, toks[idx+2:], _global_call)

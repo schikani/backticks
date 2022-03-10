@@ -6,7 +6,7 @@ import sys
 import pprint
 # Include backticks module
 sys.path.insert(1, '../')
-from bt_utils import BT_to_C
+from backticks import BT_to_C
 
 
 argc = len(sys.argv)
