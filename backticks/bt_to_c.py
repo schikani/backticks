@@ -16,8 +16,11 @@ class BT_to_C(BT_Grammar):
         # files = os.listdir()
         # if (self.c_file_name not in files):
         #     self.__make_c_file()
-            
-        os.system(f"{compiler_path} {self.c_file_name} -o {self.bin_name}")
+    
+        # os.system(f"{compiler_path} {self.c_file_name} -o {self.bin_name}")
+        
+        # Add -lm for math 
+        os.system(f"{compiler_path} {self.c_file_name} -o {self.bin_name} -lm")
 
     def run(self):
         os.system(f"./{self.bin_name}")
