@@ -81,3 +81,6 @@ NINE        =    '9'
 
 PRINT       =    "print"
 PRINTL      =    "printl"
+SLEEP       =    "sleep"
+USLEEP      =    "usleep"
+

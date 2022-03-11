@@ -1,12 +1,27 @@
-let num1 = 5.134;
-let num2 = 8.0;
-#let _sum = 1;
 
-< add(): float
+< add(num1: float, num2: float): float
 {
     let sum = num1 + num2;
     return sum;
 }
 
-let sum = add();
+loop 
+|
+    
+|
+
+let sum = add(1, 0);
 printl(`sum = [sum]`);
+usleep(5000);
+sum = sum + 1;
+printl(`sum = [sum]`);
+usleep(500);
+sum = sum + 1;
+printl(`sum = [sum]`);
+usleep(500);
+sum = sum + 1;
+printl(`sum = [sum]`);
+usleep(500);
+sum = sum + 1;
+printl(`sum = [sum]`);
+sleep(1);

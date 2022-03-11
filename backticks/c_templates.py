@@ -29,6 +29,7 @@ f"""
 #include <string.h>
 #include <ctype.h>
 #include <math.h>
+#include <unistd.h>
 
 typedef struct
 {{

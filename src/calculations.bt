@@ -10,7 +10,6 @@ let _freq = 0.0;
     return pow(I, 2) * R;
 }
 
-
 #-------------------------------
 # Calculate Resonance Frequency
 #-------------------------------
@@ -20,9 +19,14 @@ let _freq = 0.0;
     return freq;
 }
 
+let I = 2;
+let R = 45;
+_power = power_watt(I, R);
+printl(`I = [I], R = [R] | POWER (watt): [_power]`);
 
-_power = power_watt(2, 45);
-printl(`POWER (watt): [_power]`);
 
-_freq = freq(1, 2);
-printl(`FREQ (Hz): [_freq]`);
+let L = 1;
+let C = 2;
+_freq = freq(L, C);
+_freq = _freq * 100;
+printl(`L(Henry) = [L], C(uF) = [C] | FREQ (Hz): [_freq]`);

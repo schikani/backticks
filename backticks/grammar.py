@@ -1,3 +1,4 @@
+from operator import index
 from ._tokens import *
 from .tokenizer import Tokenizer
 from .c_templates import *
@@ -201,6 +202,31 @@ class BT_Grammar(Tokenizer):
     def __if_elif_else(self, tok_list):
         pass
 
+    def __sleep(self, duration):
+        return f"sleep({duration});\n"
+    
+    def __usleep(self, duration):
+        return f"usleep({duration});\n"
+    
+    def __loop(self, vars_dict, tok_list, _global_call):
+        
+        loop_body = ""
+        for t in tok_list:
+            # loop_body += t + NEWLINE
+            pass
+
+
+        _loop = \
+f"""
+while (true)
+{{
+{loop_body}
+}}
+"""     
+        return _loop
+
+
+
     def __func(self, current_func, toks):
         if not current_func in self._vars_dict["FUNCS"]:
             self._vars_dict["FUNCS"].update({current_func: [(), {}]})
@@ -396,6 +422,14 @@ class BT_Grammar(Tokenizer):
                     else:
                         c_str += t + EQUALS + val + SEMI + NEWLINE
 
+                elif t == SLEEP:
+                    c_str += self.__sleep(toks[idx+2])
+                
+                elif t == USLEEP:
+                    c_str += self.__usleep(toks[idx+2])
+                
+                elif t == LOOP:
+                    c_str += self.__loop(toks[idx+2:toks.index(G_THAN)+1])
 
                 elif t == PRINT:
                     c_str += self.__print(vars_dict, toks[idx+2:], _global_call)
