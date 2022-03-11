@@ -3,7 +3,32 @@
     return num1 + num2;
 }
 
-# TODO: Get correct function return type when using let
-let sum = add(1, 2);
+let y = 90.5;
 
-printl(`sum = [sum]`);
+@ num(n: int): int
+{
+    if n < 5:
+    {
+        printl(`hello`);
+    }
+
+    if y == 90.5:
+    {
+        y = 90;
+        if y == 90:
+        {
+            y = 89;
+        }
+    }
+    return n;
+    
+}
+
+if y == 90.5:
+{
+    y = 90;
+    if y == 90:
+    {
+        y = 89;
+    }
+}

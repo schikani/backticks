@@ -1,6 +1,9 @@
-# Demonstration of  `let` variable #
+# Demonstration of  `let` variable 
 
-@ sum(num1: int, num2: int): float
+let num1 = 456;
+let num2 = 99.787;
+
+@ sum(): float
 { 
     let a = 15;
     let b = 5 + 6;
@@ -14,12 +17,12 @@
     printl(`a = [a], b = [b], c = [c], d = [d], e = [e], abc = [abc]`);
     return (num1 + num2) * 2;
 }
-let gg = 456;
-let hh = 99.787;
-let year = sum(10, 1001);
+
+
+let year = sum(num1, num2);
 printl(`year = [year]`);
-printl(`gg = [gg]`);
-printl(`hh = [hh]`);
+printl(`num1 = [num1]`);
+printl(`num2 = [num2]`);
 
 
 

@@ -202,28 +202,30 @@ class BT_Grammar(Tokenizer):
     def __if_elif_else(self, tok_list):
         pass
 
-    def __sleep(self, duration):
-        return f"sleep({duration});\n"
+    def __sleep(self, vars_dict, tok_list, _global_call):
+        _val, _type = self.__eval_assign_values(vars_dict, tok_list, _global_call)
+        return f"sleep({_val});\n" 
     
-    def __usleep(self, duration):
-        return f"usleep({duration});\n"
+    def __usleep(self, vars_dict, tok_list, _global_call):
+        _val, _type = self.__eval_assign_values(vars_dict, tok_list, _global_call)
+        return f"usleep({_val});\n"
     
-    def __loop(self, vars_dict, tok_list, _global_call):
+#     def __loop(self, vars_dict, tok_list, _global_call):
         
-        loop_body = ""
-        for t in tok_list:
-            # loop_body += t + NEWLINE
-            pass
+#         loop_body = ""
+#         for t in tok_list:
+#             # loop_body += t + NEWLINE
+#             pass
 
 
-        _loop = \
-f"""
-while (true)
-{{
-{loop_body}
-}}
-"""     
-        return _loop
+#         _loop = \
+# f"""
+# while (true)
+# {{
+# {loop_body}
+# }}
+# """     
+#         return _loop
 
 
 
@@ -414,22 +416,28 @@ while (true)
                     current_func = toks[idx+1]
                     self.__func(current_func, toks[idx:toks.index(RIGHTCURL)+1])
                     break
-                    
+                
+                # Reassign variables
                 elif t in vars_dict.keys() and toks[idx+1] == EQUALS:
                     val, _type = self.__eval_assign_values(vars_dict, toks[2:toks.index(SEMI)+1], _global_call)
                     if _global_call:
                         c_str += self.bin_name + DOT + t + EQUALS + val + SEMI + NEWLINE
                     else:
                         c_str += t + EQUALS + val + SEMI + NEWLINE
+                    
+                    break
 
                 elif t == SLEEP:
-                    c_str += self.__sleep(toks[idx+2])
-                
+                    c_str += self.__sleep(vars_dict, toks[idx+1:toks.index(SEMI)+1], _global_call)
+                    break
+
                 elif t == USLEEP:
-                    c_str += self.__usleep(toks[idx+2])
+                    c_str += self.__usleep(vars_dict, toks[idx+1:toks.index(SEMI)+1], _global_call)
+                    break
                 
                 elif t == LOOP:
                     c_str += self.__loop(toks[idx+2:toks.index(G_THAN)+1])
+                    break
 
                 elif t == PRINT:
                     c_str += self.__print(vars_dict, toks[idx+2:], _global_call)

@@ -28,5 +28,6 @@ printl(`I = [I], R = [R] | POWER (watt): [_power]`);
 let L = 1;
 let C = 2;
 _freq = freq(L, C);
+printl(`L(Henry) = [L], C(uF) = [C] | FREQ (Hz): [_freq]`);
 _freq = _freq * 100;
 printl(`L(Henry) = [L], C(uF) = [C] | FREQ (Hz): [_freq]`);

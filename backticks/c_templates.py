@@ -1,4 +1,5 @@
 from ._tokens import *
+import os
 
 def make_header(header_file_name, funcs_list, global_vars_list):
 
@@ -43,7 +44,7 @@ typedef struct
 #endif
 """
 
-    with open(f"{header_file_name}", "w") as bt_h:
+    with open(f"./C/{header_file_name}", "w") as bt_h:
         bt_h.write(header)
 
 def make_source(src_file_name, func_defs, funcs_list, main_body, _return):
@@ -75,5 +76,5 @@ return {_return};
 }}
 """
 
-    with open(f"{src_file_name}", "w") as bt_src:
+    with open(f"./C/{src_file_name}", "w") as bt_src:
         bt_src.write(source_c)

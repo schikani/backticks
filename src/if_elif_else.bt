@@ -1,0 +1,33 @@
+let a = 1;
+let b = 0;
+
+#if a < b:
+#    printl(`a < b`);
+
+@ some_func(): void
+{
+    let y = 0;
+    loop until y < 5:
+    {
+        y = y + 1;
+        printl(`y = [y]`);
+    }
+    
+}
+
+# While True
+#loop
+#{
+#
+#}
+
+# While (condition)
+#loop until a < 5
+#{
+#}
+
+# Do While
+#loop
+#{
+#
+#} while a < 5

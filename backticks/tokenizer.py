@@ -42,37 +42,9 @@ class Tokenizer(Lexer):
                     
                 left = right
 
-            # # Multi line
-            # elif buf[right] == TICK and buf[right+1] == TICK and buf[right+2] == TICK:
-            #         right += 3 
-            #         while ((buf[right] != TICK and buf[right+1] != TICK and buf[right+2] != TICK) and right < length):
-            #             right += 1
-
-            #         if right < length-3:
-            #             right += 3
-
-            #         left = right
-
-
             else:
 
-                # TODO
-
-
-                # if buf[right] == TICK and buf[right+1] == TICK and buf[right+2] == TICK:
-                #     right += 3 
-                #     while (buf[right] != TICK and buf[right+1] != TICK and buf[right+2] != TICK):
-                #         right += 1
-
-                #     if right < length-3:
-                #         right += 3
-                
-
-                #     left = right
-
                 # When string is found
-
-                
                 if buf[right] == TICK:
                     # left = right
 
@@ -125,23 +97,50 @@ class Tokenizer(Lexer):
                 tokens.pop(tokens.index(i))
 
 
-
         count = 0
         while (count < len(tokens)):
-            if tokens[count] == FUNCTION or tokens[count] == PUB_FUNC:
+            if tokens[count] in [FUNCTION, PUB_FUNC, IF, ELIF, ELSE, LOOP]:
                 funcs = []
-                while tokens[count] != RIGHTCURL:
-                    funcs.append(tokens[count])
+
+                closing = 0
+                while count <= len(tokens):
+                     
+
+                    if tokens[count] == RIGHTCURL:
+                        funcs.append(tokens[count])
+                        closing -= 1
+ 
+                        if closing <= 0:
+                            break
+                        else:
+                            count += 1
+
+                    # If another curl found
+                    elif tokens[count] == LEFTCURL:
+                        funcs.append(tokens[count])
+                        closing += 1
+                        count += 1
+                    
+                    else:
+                        funcs.append(tokens[count])
+                        count += 1
+
+                        
+                # print(closing)
+                if closing != 0:
+                    print("No closing bracket found!")
+                    return 
+                else:
+                    self.tokens.append(funcs)
                     count += 1
-                funcs.append(tokens[count])
-                self.tokens.append(funcs)
-                count += 1
+            
 
             else:
                 non_func = []
                 while tokens[count] != SEMI:
                     non_func.append(tokens[count])
                     count += 1
+                    
                 non_func.append(tokens[count])
                 self.tokens.append(non_func)
                 count += 1
