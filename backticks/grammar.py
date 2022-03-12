@@ -417,13 +417,18 @@ class BT_Grammar(Tokenizer):
                     break
                 
                 # Reassign variables
-                elif t in vars_dict.keys() and toks[idx+1] == EQUALS:
+                elif t in vars_dict.keys() and toks[idx+1] == EQUALS or t in self._vars_dict["GLOBALS"]["global_vars"].keys():
                     val, _type = self.__eval_assign_values(vars_dict, toks[2:toks.index(SEMI)+1], _global_call)
-                    if _global_call:
+                    if _global_call or t in self._vars_dict["GLOBALS"]["global_vars"].keys():
                         c_str += self.bin_name + DOT + t + EQUALS + val + SEMI + NEWLINE
                     else:
                         c_str += t + EQUALS + val + SEMI + NEWLINE
-                    
+                    break
+
+                elif t in self._vars_dict["FUNCS"].keys() and toks[idx+1] == LEFTBRACK:
+                    c_str += t
+                    _val, _type = self.__eval_assign_values(self._vars_dict["FUNCS"][t][1], toks[idx+1:toks.index(SEMI)+1], _global_call)
+                    c_str += _val + SEMI + NEWLINE
                     break
 
                 elif t == SLEEP:
