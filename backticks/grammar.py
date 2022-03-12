@@ -399,7 +399,6 @@ class BT_Grammar(Tokenizer):
 
         c_str = ""
         tokens = iter(tokens)
-
         for toks in tokens:
             for idx, t in enumerate(toks):
 
@@ -446,5 +445,6 @@ class BT_Grammar(Tokenizer):
                 elif t == PRINTL:
                     c_str += self.__printl(vars_dict, toks[idx+2:], _global_call)
                     break
+
 
         return c_str

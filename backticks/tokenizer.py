@@ -5,11 +5,18 @@ class Tokenizer(Lexer):
     def __init__(self, bt_file_name):
         super().__init__()
         self.bt_file_name = bt_file_name
+        self.current_line_no = 0
+
         self.bin_name = self.bt_file_name[:self.bt_file_name.find(".bt")]
         self.c_file_name = self.bin_name + ".c"
         self.h_file_name = self.bin_name + ".h"
         self.tokens = []
-        self.__tokenizer()
+        try:
+            self.__tokenizer()
+        except IndexError:
+            print("Error Occured")
+            print(f"Total Lines: {self.current_line_no}")
+            
         
     def __read_sc_file(self):
         with open(self.bt_file_name, "r") as sc_read:
@@ -33,6 +40,7 @@ class Tokenizer(Lexer):
 
             # Single line
             if buf[right] == COMMENT:
+                self.current_line_no += 1
                 right += 1
                 while (buf[right] != NEWLINE and right < length):
                     right += 1
@@ -72,8 +80,11 @@ class Tokenizer(Lexer):
 
 
                 if self.is_delimiter(buf[right]) and left == right:
+                    
+                    if buf[right] == NEWLINE:
+                        self.current_line_no += 1
 
-                    if buf[right] == LEFTCURL or buf[right] == RIGHTCURL or\
+                    elif buf[right] == LEFTCURL or buf[right] == RIGHTCURL or\
                         buf[right] == LEFTBRACK or buf[right] == RIGHTBRACK or\
                         buf[right] == SEMI:
                         tokens.append(buf[right])
@@ -105,7 +116,6 @@ class Tokenizer(Lexer):
                 closing = 0
                 while count <= len(tokens):
                      
-
                     if tokens[count] == RIGHTCURL:
                         funcs.append(tokens[count])
                         closing -= 1
