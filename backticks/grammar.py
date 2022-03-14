@@ -1,4 +1,5 @@
 from operator import index
+from tkinter import RIGHT
 from ._tokens import *
 from .tokenizer import Tokenizer
 from .c_templates import *
@@ -32,18 +33,22 @@ class BT_Grammar(Tokenizer):
                 }],
 
                 "func2": [
-                        (ret_val, ret_type),
+                        (ret_val, ret_type),    --> index 0 of 'function2'
                 {
-                        "var1": [val, type],
+                        "var1": [val, type], 
                         "var2": [val, type],
-                }]
+                }
+            ]
             }
         '''
         self._vars_dict["GLOBALS"] = {"global_vars": {}}
         self._vars_dict["FUNCS"] = {}
 
 
-    def __eval_assign_values(self, vars_dict, tok_list, _global_call):
+
+
+
+    def __eval_assign_values(self, vars_dict, tok_list, _global_call, _del):
         float_found = False
         str_found = False
         int_found = False
@@ -51,15 +56,17 @@ class BT_Grammar(Tokenizer):
         _type = ""
         _val_idx = 0
 
-        while (tok_list[_val_idx] != SEMI):
+        # print(tok_list)
+
+        while tok_list[_val_idx] != _del:
 
             v = tok_list[_val_idx]
-            if v in [ADD, SUB, MUL, DIV]:
+
+            if self.is_operator(v):
                 val += v
 
-            elif v in [LEFTBRACK, RIGHTBRACK]:
+            elif v in [LEFTBRACK, RIGHTBRACK, LEFTCURL, RIGHTCURL]:
                 val += v
-
             
             elif v in vars_dict.keys() or v in self._vars_dict["FUNCS"].keys():
 
@@ -129,7 +136,8 @@ class BT_Grammar(Tokenizer):
         
         return (val, _type)
 
-    # TODO
+
+
     '''
     Make a function for each keyword and call each other in recursion
     '''
@@ -149,7 +157,7 @@ class BT_Grammar(Tokenizer):
 
             if assign == EQUALS:
 
-                val, _type = self.__eval_assign_values(vars_dict, tok_list[2:], _global_call)
+                val, _type = self.__eval_assign_values(vars_dict, tok_list[2:], _global_call, SEMI)
 
                 vars_dict[var].append(val)
                 vars_dict[var].append(_type)
@@ -199,48 +207,67 @@ class BT_Grammar(Tokenizer):
 
             return self.__string_parser(print_str, vars_dict, _global_call, new_line=True)
 
-    def __if_elif_else(self, tok_list):
-        pass
+
+    def __if_elif_else(self, vars_dict, tok_list, _global_call):
+        
+        # Determine the control type (if/elif/else/loop/loop until)
+        str_to_ret = ""
+        # print(tok_list)
+
+        for idx, t in enumerate(tok_list):
+            
+            if t in [IF, ELIF, ELSE]:
+                if t == ELIF:
+                    t = "else if"
+                
+                str_to_ret += t + SPACE + LEFTBRACK
+
+                # ctrl-type = 0, 
+
+                str_to_ret += self.__eval_assign_values(vars_dict, tok_list[idx+1:tok_list.index(LEFTCURL)], _global_call, LEFTCURL)
+
+            elif t == LEFTCURL:
+                str_to_ret += RIGHTBRACK + SPACE + NEWLINE + LEFTCURL + NEWLINE
+
+            elif t in [SEMI, RIGHTCURL]:
+                str_to_ret += t + NEWLINE
+
+            elif t in [LET, PRINT, PRINTL, SLEEP, USLEEP]:
+                pass
+                # str_to_ret += self._convert_to_c_str(tok_list[idx:tok_list.index(SEMI)+1], vars_dict, _global_call)
+                # break
+            
+            else:
+                str_to_ret += t
+                # str_to_ret += self._convert_to_c_str(tok_list[idx:tok_list.index(SEMI)], vars_dict, _global_call)
+
+        # print(str_to_ret)
+
+        return str_to_ret
+
+        
 
     def __sleep(self, vars_dict, tok_list, _global_call):
-        _val, _type = self.__eval_assign_values(vars_dict, tok_list, _global_call)
+        _val, _type = self.__eval_assign_values(vars_dict, tok_list, _global_call, SEMI)
         return f"sleep({_val});\n" 
     
     def __usleep(self, vars_dict, tok_list, _global_call):
-        _val, _type = self.__eval_assign_values(vars_dict, tok_list, _global_call)
+        _val, _type = self.__eval_assign_values(vars_dict, tok_list, _global_call, SEMI)
         return f"usleep({_val});\n"
     
-#     def __loop(self, vars_dict, tok_list, _global_call):
-        
-#         loop_body = ""
-#         for t in tok_list:
-#             # loop_body += t + NEWLINE
-#             pass
-
-
-#         _loop = \
-# f"""
-# while (true)
-# {{
-# {loop_body}
-# }}
-# """     
-#         return _loop
-
-
 
     def __func(self, current_func, toks):
         if not current_func in self._vars_dict["FUNCS"]:
             self._vars_dict["FUNCS"].update({current_func: [(), {}]})
-            prms_and_ret = toks[toks.index(LEFTBRACK):toks.index(LEFTCURL)]
-            params = prms_and_ret[prms_and_ret.index(
-                LEFTBRACK)+1:prms_and_ret.index(RIGHTBRACK)]
+            prms_and_ret = toks[toks.index(LEFTBRACK) : toks.index(LEFTCURL)]
+            params = prms_and_ret[prms_and_ret.index(LEFTBRACK)+1 : prms_and_ret.index(RIGHTBRACK)]
             func_body_toks = toks[toks.index(LEFTCURL)+1:toks.index(RIGHTCURL)]
 
             # Extract return type and value
             return_type = prms_and_ret[-1]
             ret_val = ""
-            if return_type == RIGHTBRACK:
+
+            if return_type == COLON or return_type == RIGHTBRACK:
                 return_type = VOID
         
             elif return_type == INT:
@@ -259,39 +286,41 @@ class BT_Grammar(Tokenizer):
 
             c_func_params = ""
 
-            # Extract param vars and types and skip if no params
-            _idx = 0
-            while (_idx < len(params)):
-                var = params[_idx]
-                _type = params[_idx+2]
-                val = ""
-                if _type == INT:
-                    _type = LONG
-                    val = "0"
-
-                elif _type == FLOAT:
-                    _type = DOUBLE
-                    val = "0.0f"
-
-                elif _type == STR:
+            if params and params[0] != ":":
+                # Extract param vars and types and skip if no params
+                _idx = 0
+                while (_idx < len(params)):
+                    var = params[_idx]
+                    _type = params[_idx+2]
                     val = ""
+                    if _type == INT:
+                        _type = LONG
+                        val = "0"
 
-                # print(var, _type, val)
-                self._vars_dict["FUNCS"][current_func][1][var] = (val, _type)
-                c_func_params += f"{_type} {var}"
+                    elif _type == FLOAT:
+                        _type = DOUBLE
+                        val = "0.0f"
 
-                # To exclude comma after last param
-                if _idx < len(params) - 3:
-                    c_func_params += ", "
-                _idx += 4
+                    elif _type == STR:
+                        val = ""
 
-            # print(c_func_params)
+                    # print(var, _type, val)
+                    self._vars_dict["FUNCS"][current_func][1][var] = (val, _type)
+                    c_func_params += f"{_type} {var}"
+
+                    # To exclude comma after last param
+                    if _idx < len(params) - 3:
+                        c_func_params += ", "
+                    _idx += 4
+
+                # print(c_func_params)
 
             toks_to_pass_on = []
 
             # Seperate tokens with semi
             count = 0
             while (count < len(func_body_toks)):
+
                 t = []
                 while func_body_toks[count] != SEMI:
                     t.append(func_body_toks[count])
@@ -317,7 +346,7 @@ class BT_Grammar(Tokenizer):
 
     def __return(self, vars_dict, tok_list):
 
-        ret_val, _type = self.__eval_assign_values(vars_dict, tok_list, False)
+        ret_val, _type = self.__eval_assign_values(vars_dict, tok_list, False, SEMI)
 
         ret_val = RETURN + SPACE + ret_val + SEMI
 
@@ -397,14 +426,29 @@ class BT_Grammar(Tokenizer):
 
     def _convert_to_c_str(self, tokens, vars_dict, _global_call=True):
 
+  
         c_str = ""
         tokens = iter(tokens)
         for toks in tokens:
             for idx, t in enumerate(toks):
+                    
+                if t in [LEFTCURL, RIGHTCURL]:
+                    c_str += t
 
-                if self.is_keyword(t):
+                elif self.is_keyword(t):
+
+                    # LET
                     if t == LET:
                         c_str += self.__let(vars_dict, toks[idx+1:], _global_call)
+
+
+                    # IF ELIF ELSE                  
+                    elif t in [IF, ELIF, ELSE]:
+                        condition = toks
+                        c_str += self.__if_elif_else(vars_dict, condition, _global_call)
+
+                        break
+
 
                     elif t == RETURN:
                         c_str += self.__return(vars_dict, toks[idx+1:toks.index(SEMI)+1])
@@ -413,12 +457,18 @@ class BT_Grammar(Tokenizer):
 
                 elif t == FUNCTION or t == PUB_FUNC:
                     current_func = toks[idx+1]
+                    # print(toks)
                     self.__func(current_func, toks[idx:toks.index(RIGHTCURL)+1])
                     break
                 
-                # Reassign variables
+                # Check if the name already exist as func_name and var both
+                elif t in self._vars_dict["GLOBALS"]["global_vars"].keys() and t in self._vars_dict["FUNCS"].keys() and toks[idx+1] == LEFTBRACK:
+                    print("A `function name` cannot be similar to a `global variable`")
+                    return ""
+
+                # While reassigning varibles, check for varibale scope or if it is a function
                 elif t in vars_dict.keys() and toks[idx+1] == EQUALS or t in self._vars_dict["GLOBALS"]["global_vars"].keys():
-                    val, _type = self.__eval_assign_values(vars_dict, toks[2:toks.index(SEMI)+1], _global_call)
+                    val, _type = self.__eval_assign_values(vars_dict, toks[2:toks.index(SEMI)+1], _global_call, SEMI)
                     if _global_call or t in self._vars_dict["GLOBALS"]["global_vars"].keys():
                         c_str += self.bin_name + DOT + t + EQUALS + val + SEMI + NEWLINE
                     else:
@@ -426,8 +476,11 @@ class BT_Grammar(Tokenizer):
                     break
 
                 elif t in self._vars_dict["FUNCS"].keys() and toks[idx+1] == LEFTBRACK:
+                    # get function name
                     c_str += t
-                    _val, _type = self.__eval_assign_values(self._vars_dict["FUNCS"][t][1], toks[idx+1:toks.index(SEMI)+1], _global_call)
+                    # Get function variables dict on index[1] with "var": (val, type) pairs
+                    _vars_dict = self._vars_dict["FUNCS"][t][1]
+                    _val, _type = self.__eval_assign_values(_vars_dict, toks[idx+1:toks.index(SEMI)+1], _global_call, SEMI)
                     c_str += _val + SEMI + NEWLINE
                     break
 
@@ -439,9 +492,9 @@ class BT_Grammar(Tokenizer):
                     c_str += self.__usleep(vars_dict, toks[idx+1:toks.index(SEMI)+1], _global_call)
                     break
                 
-                elif t == LOOP:
-                    c_str += self.__loop(toks[idx+2:toks.index(G_THAN)+1])
-                    break
+                # elif t == LOOP:
+                #     c_str += self.__loop(toks[idx+2:toks.index(G_THAN)+1])
+                #     break
 
                 elif t == PRINT:
                     c_str += self.__print(vars_dict, toks[idx+2:], _global_call)
@@ -451,5 +504,13 @@ class BT_Grammar(Tokenizer):
                     c_str += self.__printl(vars_dict, toks[idx+2:], _global_call)
                     break
 
-
         return c_str
+
+        # except IndexError:
+        #     # print(f"Current Line: {self.current_line_no}")
+        #     print("Error in script!, Maybe missing delimiters?")
+        #     return ""
+
+
+
+        

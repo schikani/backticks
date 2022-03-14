@@ -1,16 +1,16 @@
-from .c_templates import make_source
 from ._tokens import *
 from .grammar import BT_Grammar
-from .c_templates import *
+from .c_templates import make_source, make_header
 import os
 
-if "C" not in os.listdir("."):
-    os.mkdir("C")
-
-if "bin" not in os.listdir("."):
-    os.mkdir("bin")
 
 class BT_to_C(BT_Grammar):
+    if "C" not in os.listdir("."):
+        os.mkdir("C")
+
+    if "bin" not in os.listdir("."):
+        os.mkdir("bin")
+
     def __init__(self, bt_file_name):
         super().__init__(bt_file_name)
         # print(self._func_list)
@@ -19,14 +19,9 @@ class BT_to_C(BT_Grammar):
         
 
     def compile(self, compiler_path):
-        # files = os.listdir()
-        # if (self.c_file_name not in files):
-        #     self.__make_c_file()
-    
-        # os.system(f"{compiler_path} {self.c_file_name} -o {self.bin_name}")
-        
-        # Add -lm for math 
         os.system(f"{compiler_path} ./C/{self.c_file_name} -o ./bin/{self.bin_name} -lm")
+
+
 
     def run(self):
         os.system(f"./bin/{self.bin_name}")

@@ -1,5 +1,4 @@
 from ._tokens import *
-import os
 
 def make_header(header_file_name, funcs_list, global_vars_list):
 

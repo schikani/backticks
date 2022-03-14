@@ -62,6 +62,7 @@ BREAK       =    "break"
 CONTINUE    =    "continue"
 IF          =    "if"
 ELIF        =    "elif"
+ELSE_IF     =    "else if"
 ELSE        =    "else"
 RETURN      =    "return"
 

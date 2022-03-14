@@ -33,127 +33,135 @@ class Tokenizer(Lexer):
 
         tokens = []
 
-        while (right < length):
-            
-            
-            # COMMENTS
+        try:
+            while (right < length):
+                
+                
+                # COMMENTS
 
-            # Single line
-            if buf[right] == COMMENT:
-                self.current_line_no += 1
-                right += 1
-                while (buf[right] != NEWLINE and right < length):
+                # Single line
+                if buf[right] == COMMENT:
+                    self.current_line_no += 1
                     right += 1
-
-                if right < length:
-                    right += 1
-                    
-                left = right
-
-            else:
-
-                # When string is found
-                if buf[right] == TICK:
-                    # left = right
-
-                    right += 1
-
-                    while right < length:
-                        if buf[right] == TICK and buf[right-1] != BACKSLASH:
-                            break
+                    while (buf[right] != NEWLINE and right < length):
                         right += 1
-                    right += 1
 
-                    sub_str = self.sub_string(buf, left, right)
-
-                    # Replace "\`" with "`"
-                    sub_str = sub_str.replace(BACKTICK, TICK)
-                    # print(sub_str)
-                    # print("\n")
-                    tokens.append(sub_str)
-                    left = right+1
-
-                # Simply increament if delimiter not found
-                # print(right)
-                if not self.is_delimiter(buf[right]):
-                    right += 1
-
-
-                if self.is_delimiter(buf[right]) and left == right:
-                    
-                    if buf[right] == NEWLINE:
-                        self.current_line_no += 1
-
-                    elif buf[right] == LEFTCURL or buf[right] == RIGHTCURL or\
-                        buf[right] == LEFTBRACK or buf[right] == RIGHTBRACK or\
-                        buf[right] == SEMI:
-                        tokens.append(buf[right])
-
-                    elif self.is_operator(buf[right]):
-                        tokens.append(buf[right])
-                    
-                    right += 1
+                    if right < length:
+                        right += 1
+                        
                     left = right
 
-                # Extract substring
-                elif self.is_delimiter(buf[right]) and left != right or (right == length and left != right):
-                    sub_str = self.sub_string(buf, left, right)
-                    tokens.append(sub_str)
+                else:
 
-                    left = right
+                    # When string is found
+                    if buf[right] == TICK:
+                        # left = right
+
+                        right += 1
+
+                        while right < length:
+                            if buf[right] == TICK and buf[right-1] != BACKSLASH:
+                                break
+                            right += 1
+                        right += 1
+
+                        sub_str = self.sub_string(buf, left, right)
+
+                        # Replace "\`" with "`"
+                        sub_str = sub_str.replace(BACKTICK, TICK)
+                        # print(sub_str)
+                        # print("\n")
+                        tokens.append(sub_str)
+                        left = right+1
+
+                    # Simply increament if delimiter not found
+                    # print(right)
+                    if not self.is_delimiter(buf[right]):
+                        right += 1
+
+
+                    if self.is_delimiter(buf[right]) and left == right:
+                        
+                        if buf[right] == NEWLINE:
+                            self.current_line_no += 1
+
+                        elif buf[right] == LEFTCURL or buf[right] == RIGHTCURL or\
+                            buf[right] == LEFTBRACK or buf[right] == RIGHTBRACK or\
+                            buf[right] == SEMI:
+                            tokens.append(buf[right])
+
+                        elif self.is_operator(buf[right]):
+                            tokens.append(buf[right])
+                        
+                        right += 1
+                        left = right
+
+                    # Extract substring
+                    elif self.is_delimiter(buf[right]) and left != right or (right == length and left != right):
+                        sub_str = self.sub_string(buf, left, right)
+                        tokens.append(sub_str)
+
+                        left = right
+
+        except IndexError:
+            print(f"Current Line: {self.current_line_no}")
+
         
         # Remove empty strings
         for i in tokens:
             if i == "":
                 tokens.pop(tokens.index(i))
 
+        try:
+            count = 0
+            while (count < len(tokens)):
+                if tokens[count] in [FUNCTION, PUB_FUNC, IF, ELIF, ELSE, LOOP]:
+                    funcs = []
 
-        count = 0
-        while (count < len(tokens)):
-            if tokens[count] in [FUNCTION, PUB_FUNC, IF, ELIF, ELSE, LOOP]:
-                funcs = []
+                    closing = 0
+                    while count <= len(tokens):
+                        
+                        if tokens[count] == RIGHTCURL:
+                            funcs.append(tokens[count])
+                            closing -= 1
+    
+                            if closing <= 0:
+                                break
+                            else:
+                                count += 1
 
-                closing = 0
-                while count <= len(tokens):
-                     
-                    if tokens[count] == RIGHTCURL:
-                        funcs.append(tokens[count])
-                        closing -= 1
- 
-                        if closing <= 0:
-                            break
+                        # If another curl found
+                        elif tokens[count] == LEFTCURL:
+                            funcs.append(tokens[count])
+                            closing += 1
+                            count += 1
+                        
                         else:
+                            funcs.append(tokens[count])
                             count += 1
 
-                    # If another curl found
-                    elif tokens[count] == LEFTCURL:
-                        funcs.append(tokens[count])
-                        closing += 1
-                        count += 1
-                    
+                            
+                    # print(closing)
+                    if closing != 0:
+                        print("No closing bracket found!")
+                        return 
                     else:
-                        funcs.append(tokens[count])
+                        self.tokens.append(funcs)
                         count += 1
+                
 
-                        
-                # print(closing)
-                if closing != 0:
-                    print("No closing bracket found!")
-                    return 
                 else:
-                    self.tokens.append(funcs)
-                    count += 1
-            
-
-            else:
-                non_func = []
-                while tokens[count] != SEMI:
+                    non_func = []
+                    while tokens[count] != SEMI:
+                        non_func.append(tokens[count])
+                        count += 1
+                        
                     non_func.append(tokens[count])
+                    self.tokens.append(non_func)
                     count += 1
-                    
-                non_func.append(tokens[count])
-                self.tokens.append(non_func)
-                count += 1
 
-        # for i in self.tokens:
-        #     print(i)
+            # for i in self.tokens:
+            #     print(i)
+        except IndexError:
+            print(f"Current Line: {self.current_line_no}")
+

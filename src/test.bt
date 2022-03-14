@@ -1,0 +1,33 @@
+let age: int;
+
+
+< get_age(): int
+{
+    printl(`age = [age]`);
+    return age;
+}
+
+@ set_age(value: int):
+{
+    age = value;
+}
+
+get_age();
+set_age(25);
+get_age();
+
+
+@ publish(duration: int):
+{
+    # if duration == 1
+    # {
+    #     printl(`~~1~~`);
+    # }
+
+    printl(`~~1~~`);
+    sleep(duration);
+}
+
+publish(1);
+
+
