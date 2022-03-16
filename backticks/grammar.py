@@ -1,3 +1,4 @@
+from lib2to3.pgen2.token import tok_name
 from operator import index
 from tkinter import RIGHT
 from ._tokens import *
@@ -57,6 +58,8 @@ class BT_Grammar(Tokenizer):
         _val_idx = 0
 
         # print(tok_list)
+
+        # if tok_list[0] not in [IF, ELIF, ELSE, PRINT, PRINTL, SLEEP, USLEEP]:
 
         while tok_list[_val_idx] != _del:
 
@@ -212,37 +215,40 @@ class BT_Grammar(Tokenizer):
         
         # Determine the control type (if/elif/else/loop/loop until)
         str_to_ret = ""
+
         # print(tok_list)
 
-        for idx, t in enumerate(tok_list):
-            
-            if t in [IF, ELIF, ELSE]:
-                if t == ELIF:
-                    t = "else if"
+        if tok_list[0] in [IF, ELIF, ELSE]:
+            if tok_list[0] == ELIF:
+                tok_list[0] = ELSE_IF
+        
+        if tok_list[0] != ELSE:
+                    
+            if tok_list[1] != LEFTBRACK:
+                str_to_ret += tok_list[0] + SPACE + LEFTBRACK
+                _val, _type = self.__eval_assign_values(vars_dict, tok_list[1:], _global_call, LEFTCURL)
+                str_to_ret += _val + RIGHTBRACK + NEWLINE + LEFTCURL + NEWLINE
                 
-                str_to_ret += t + SPACE + LEFTBRACK
-
-                # ctrl-type = 0, 
-
-                str_to_ret += self.__eval_assign_values(vars_dict, tok_list[idx+1:tok_list.index(LEFTCURL)], _global_call, LEFTCURL)
-
-            elif t == LEFTCURL:
-                str_to_ret += RIGHTBRACK + SPACE + NEWLINE + LEFTCURL + NEWLINE
-
-            elif t in [SEMI, RIGHTCURL]:
-                str_to_ret += t + NEWLINE
-
-            elif t in [LET, PRINT, PRINTL, SLEEP, USLEEP]:
-                pass
-                # str_to_ret += self._convert_to_c_str(tok_list[idx:tok_list.index(SEMI)+1], vars_dict, _global_call)
-                # break
-            
             else:
-                str_to_ret += t
-                # str_to_ret += self._convert_to_c_str(tok_list[idx:tok_list.index(SEMI)], vars_dict, _global_call)
+                str_to_ret += tok_list[0] + SPACE
+                _val, _type = self.__eval_assign_values(vars_dict, tok_list[1:], _global_call, LEFTCURL)
+                str_to_ret += _val + NEWLINE + LEFTCURL + NEWLINE
 
-        # print(str_to_ret)
+        else:
+            str_to_ret += tok_list[0] + SPACE + LEFTCURL + NEWLINE
 
+        start = tok_list.index(LEFTCURL)+1
+        str_start = start
+        while start < len(tok_list):
+            if tok_list[start] in [IF, ELIF, ELSE]:
+                str_to_ret += self.__if_elif_else(vars_dict, tok_list[start:], _global_call)
+                start += 1
+
+            elif tok_list[start] == SEMI:
+
+                str_to_ret += self._convert_to_c_str([t], vars_dict, _global_call)
+
+            
         return str_to_ret
 
         
@@ -428,14 +434,16 @@ class BT_Grammar(Tokenizer):
 
   
         c_str = ""
+
+        # print(tokens)
         tokens = iter(tokens)
         for toks in tokens:
             for idx, t in enumerate(toks):
                     
-                if t in [LEFTCURL, RIGHTCURL]:
-                    c_str += t
+                # if t in [LEFTCURL, RIGHTCURL]:
+                #     c_str += t
 
-                elif self.is_keyword(t):
+                if self.is_keyword(t):
 
                     # LET
                     if t == LET:
@@ -444,8 +452,7 @@ class BT_Grammar(Tokenizer):
 
                     # IF ELIF ELSE                  
                     elif t in [IF, ELIF, ELSE]:
-                        condition = toks
-                        c_str += self.__if_elif_else(vars_dict, condition, _global_call)
+                        c_str += self.__if_elif_else(vars_dict, toks, _global_call)
 
                         break
 
