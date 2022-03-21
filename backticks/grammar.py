@@ -238,15 +238,32 @@ class BT_Grammar(Tokenizer):
             str_to_ret += tok_list[0] + SPACE + LEFTCURL + NEWLINE
 
         start = tok_list.index(LEFTCURL)+1
-        str_start = start
+        sub_toks = []
+
         while start < len(tok_list):
+            
             if tok_list[start] in [IF, ELIF, ELSE]:
                 str_to_ret += self.__if_elif_else(vars_dict, tok_list[start:], _global_call)
+                break
+
+            elif tok_list[start] == RIGHTCURL:
+                str_to_ret += tok_list[start]
                 start += 1
 
+
+            elif tok_list[start] != SEMI:
+
+                sub_toks.append(tok_list[start])
+                start += 1
+            
             elif tok_list[start] == SEMI:
 
-                str_to_ret += self._convert_to_c_str([t], vars_dict, _global_call)
+                sub_toks.append(tok_list[start])
+                str_to_ret += self._convert_to_c_str([sub_toks], vars_dict, _global_call)
+                sub_toks.clear()
+
+                start += 1
+
 
             
         return str_to_ret
@@ -263,11 +280,17 @@ class BT_Grammar(Tokenizer):
     
 
     def __func(self, current_func, toks):
+        c_func_params = ""
+
         if not current_func in self._vars_dict["FUNCS"]:
             self._vars_dict["FUNCS"].update({current_func: [(), {}]})
             prms_and_ret = toks[toks.index(LEFTBRACK) : toks.index(LEFTCURL)]
             params = prms_and_ret[prms_and_ret.index(LEFTBRACK)+1 : prms_and_ret.index(RIGHTBRACK)]
+
+            # func_body_toks = toks[toks.index(LEFTCURL)+1:]
+
             func_body_toks = toks[toks.index(LEFTCURL)+1:toks.index(RIGHTCURL)]
+
 
             # Extract return type and value
             return_type = prms_and_ret[-1]
@@ -290,7 +313,6 @@ class BT_Grammar(Tokenizer):
             # print(return_type, ret_val)
             self._vars_dict["FUNCS"][current_func][0] = (ret_val, return_type)
 
-            c_func_params = ""
 
             if params and params[0] != ":":
                 # Extract param vars and types and skip if no params
@@ -321,6 +343,52 @@ class BT_Grammar(Tokenizer):
 
                 # print(c_func_params)
 
+            # start = func_body_toks.index(LEFTCURL)+1
+            # sub_toks = []
+            # str_to_ret = ""
+
+            # while start < len(func_body_toks):
+                
+            #     if func_body_toks[start] in [IF, ELIF, ELSE]:
+            #         str_to_ret += self.__if_elif_else(self._vars_dict["FUNCS"][current_func][1], func_body_toks[start:], _global_call=False)
+            #         break
+
+            #     elif func_body_toks[start] == RIGHTCURL:
+            #         str_to_ret += func_body_toks[start]
+            #         start += 1
+
+
+            #     elif func_body_toks[start] != SEMI:
+
+            #         sub_toks.append(func_body_toks[start])
+            #         start += 1
+                
+            #     elif func_body_toks[start] == SEMI:
+
+            #         sub_toks.append(func_body_toks[start])
+            #         str_to_ret += self._convert_to_c_str([sub_toks], self._vars_dict["FUNCS"][current_func][1], _global_call=False)
+
+            #         sub_toks.clear()
+
+            #         start += 1
+
+
+            # func = f"{return_type} {current_func}({c_func_params})" + \
+            #     NEWLINE + LEFTCURL + NEWLINE
+
+            # func += str_to_ret
+
+            # self._funcs_impl.append(func)
+
+            # if toks[0] == FUNCTION:
+            #     self._private_func_list.append(
+            #         f"{return_type} {current_func}({c_func_params});")
+            # elif toks[0] == PUB_FUNC:
+            #     self._public_func_list.append(
+            #         f"{return_type} {current_func}({c_func_params});")
+
+
+
             toks_to_pass_on = []
 
             # Seperate tokens with semi
@@ -339,6 +407,9 @@ class BT_Grammar(Tokenizer):
 
             func = f"{return_type} {current_func}({c_func_params})" + \
                 NEWLINE + LEFTCURL + NEWLINE
+
+            # func += str_to_ret
+
             func += self._convert_to_c_str(
                 toks_to_pass_on, self._vars_dict["FUNCS"][current_func][1], _global_call=False) + NEWLINE + RIGHTCURL
             self._funcs_impl.append(func)
@@ -443,7 +514,15 @@ class BT_Grammar(Tokenizer):
                 # if t in [LEFTCURL, RIGHTCURL]:
                 #     c_str += t
 
-                if self.is_keyword(t):
+                if t == FUNCTION or t == PUB_FUNC:
+                    current_func = toks[idx+1]
+                    # print(toks)
+                    # self.__func(current_func, toks[idx:toks.index(RIGHTCURL)+1])
+                    self.__func(current_func, toks)
+
+                    break
+
+                elif self.is_keyword(t):
 
                     # LET
                     if t == LET:
@@ -462,11 +541,6 @@ class BT_Grammar(Tokenizer):
 
                     break
 
-                elif t == FUNCTION or t == PUB_FUNC:
-                    current_func = toks[idx+1]
-                    # print(toks)
-                    self.__func(current_func, toks[idx:toks.index(RIGHTCURL)+1])
-                    break
                 
                 # Check if the name already exist as func_name and var both
                 elif t in self._vars_dict["GLOBALS"]["global_vars"].keys() and t in self._vars_dict["FUNCS"].keys() and toks[idx+1] == LEFTBRACK:
