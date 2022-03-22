@@ -23,34 +23,36 @@ get_age();
     sleep(duration);
 }
 
-if age == 25
+@ check_func()
 {
-    let t = 5;
-    printl(`~~1~~`);
-    sleep(1);
-    if a == 0
+    let ty = 90;
+    if age == 25
     {
-        publish(1);
-        printl(`~~20~~`);
+        let t = 5;
+        printl(`~~1~~`);
         sleep(1);
-        if a == 2
+        if a == 0
         {
-            printl(`sdfsdf`);
-        }
-        if a != 0
-        {
-            printl(`a = [a]`);
-            usleep(100000);
-        }
-        else
-        {
-            printl(`wd`);
+            publish(1);
+            printl(`~~20~~`);
+            sleep(1);
+            if a == 2
+            {
+                printl(`sdfsdf`);
+            }
+            if a != 0
+            {
+                printl(`a = [a]`);
+                usleep(100000);
+            }
+            else
+            {
+                printl(`wd`);
+            }
+
         }
     }
 }
 
 
-
-
-
-# check_func();
+check_func();

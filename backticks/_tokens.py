@@ -55,6 +55,7 @@ UINT        =    "uint"
 BOOL        =    "bool"
 FLOAT       =    "float"
 STR         =    "str"
+CHARSTAR    =    "char *"
 
 LET         =    "let"
 LOOP        =    "loop"

@@ -211,9 +211,9 @@ class BT_Grammar(Tokenizer):
             return self.__string_parser(print_str, vars_dict, _global_call, new_line=True)
 
 
+    # Determine the control type (if/elif/else/loop/loop until)
     def __if_elif_else(self, vars_dict, tok_list, _global_call):
         
-        # Determine the control type (if/elif/else/loop/loop until)
         str_to_ret = ""
 
         # print(tok_list)
@@ -289,7 +289,7 @@ class BT_Grammar(Tokenizer):
 
             # func_body_toks = toks[toks.index(LEFTCURL)+1:]
 
-            func_body_toks = toks[toks.index(LEFTCURL)+1:toks.index(RIGHTCURL)]
+            func_body_toks = toks[toks.index(LEFTCURL)+1:-1]
 
 
             # Extract return type and value
@@ -341,77 +341,38 @@ class BT_Grammar(Tokenizer):
                         c_func_params += ", "
                     _idx += 4
 
-                # print(c_func_params)
 
-            # start = func_body_toks.index(LEFTCURL)+1
-            # sub_toks = []
-            # str_to_ret = ""
+            start = 0
+            sub_toks = []
+            str_to_ret = ""
 
-            # while start < len(func_body_toks):
+            while start < len(func_body_toks):
                 
-            #     if func_body_toks[start] in [IF, ELIF, ELSE]:
-            #         str_to_ret += self.__if_elif_else(self._vars_dict["FUNCS"][current_func][1], func_body_toks[start:], _global_call=False)
-            #         break
-
-            #     elif func_body_toks[start] == RIGHTCURL:
-            #         str_to_ret += func_body_toks[start]
-            #         start += 1
+                if func_body_toks[start] in [IF, ELIF, ELSE]:
+                    str_to_ret += self.__if_elif_else(self._vars_dict["FUNCS"][current_func][1], func_body_toks[start:], _global_call=False)
+                    break
 
 
-            #     elif func_body_toks[start] != SEMI:
+                elif func_body_toks[start] != SEMI:
 
-            #         sub_toks.append(func_body_toks[start])
-            #         start += 1
+                    sub_toks.append(func_body_toks[start])
+                    start += 1
                 
-            #     elif func_body_toks[start] == SEMI:
+                elif func_body_toks[start] == SEMI:
 
-            #         sub_toks.append(func_body_toks[start])
-            #         str_to_ret += self._convert_to_c_str([sub_toks], self._vars_dict["FUNCS"][current_func][1], _global_call=False)
+                    sub_toks.append(func_body_toks[start])
+                    str_to_ret += self._convert_to_c_str([sub_toks], self._vars_dict["FUNCS"][current_func][1], _global_call=False)
 
-            #         sub_toks.clear()
+                    sub_toks.clear()
 
-            #         start += 1
+                    start += 1
 
-
-            # func = f"{return_type} {current_func}({c_func_params})" + \
-            #     NEWLINE + LEFTCURL + NEWLINE
-
-            # func += str_to_ret
-
-            # self._funcs_impl.append(func)
-
-            # if toks[0] == FUNCTION:
-            #     self._private_func_list.append(
-            #         f"{return_type} {current_func}({c_func_params});")
-            # elif toks[0] == PUB_FUNC:
-            #     self._public_func_list.append(
-            #         f"{return_type} {current_func}({c_func_params});")
-
-
-
-            toks_to_pass_on = []
-
-            # Seperate tokens with semi
-            count = 0
-            while (count < len(func_body_toks)):
-
-                t = []
-                while func_body_toks[count] != SEMI:
-                    t.append(func_body_toks[count])
-                    count += 1
-                t.append(func_body_toks[count])
-                toks_to_pass_on.append(t)
-                count += 1
-
-            # print(toks_to_pass_on)
 
             func = f"{return_type} {current_func}({c_func_params})" + \
                 NEWLINE + LEFTCURL + NEWLINE
 
-            # func += str_to_ret
+            func += str_to_ret + RIGHTCURL + NEWLINE
 
-            func += self._convert_to_c_str(
-                toks_to_pass_on, self._vars_dict["FUNCS"][current_func][1], _global_call=False) + NEWLINE + RIGHTCURL
             self._funcs_impl.append(func)
 
             if toks[0] == FUNCTION:
@@ -420,6 +381,7 @@ class BT_Grammar(Tokenizer):
             elif toks[0] == PUB_FUNC:
                 self._public_func_list.append(
                     f"{return_type} {current_func}({c_func_params});")
+
 
     def __return(self, vars_dict, tok_list):
 
@@ -591,7 +553,3 @@ class BT_Grammar(Tokenizer):
         #     # print(f"Current Line: {self.current_line_no}")
         #     print("Error in script!, Maybe missing delimiters?")
         #     return ""
-
-
-
-        
