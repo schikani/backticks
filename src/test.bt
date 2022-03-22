@@ -23,7 +23,7 @@ get_age();
     sleep(duration);
 }
 
-@ check_func()
+< check_func()
 {
     let ty = 90;
     if age == 25
@@ -54,5 +54,23 @@ get_age();
     }
 }
 
+let count = 0;
+loop
+{
+    if count >= 10
+    {
+        break;
+    }
+    count = count + 1;
+    printl(`count = [count]`);
+    usleep(100000);
+}
 
-check_func();
+loop until count > 10 and count < 20
+{
+    count = count + 1;
+    printl(`count = [count]`);
+    usleep(100000);
+}
+
+# check_func();

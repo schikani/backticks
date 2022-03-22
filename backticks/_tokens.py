@@ -65,6 +65,10 @@ IF          =    "if"
 ELIF        =    "elif"
 ELSE_IF     =    "else if"
 ELSE        =    "else"
+WHILE       =    "while"
+UNTIL       =    "until"
+AND         =    "and"
+OR          =    "or"
 RETURN      =    "return"
 
 ZERO        =    '0'

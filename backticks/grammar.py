@@ -70,6 +70,13 @@ class BT_Grammar(Tokenizer):
 
             elif v in [LEFTBRACK, RIGHTBRACK, LEFTCURL, RIGHTCURL]:
                 val += v
+
+            elif v in [AND, OR]:
+                if v == AND:
+                    val += " && "
+                
+                elif v == OR:
+                    val += " || "
             
             elif v in vars_dict.keys() or v in self._vars_dict["FUNCS"].keys():
 
@@ -209,6 +216,59 @@ class BT_Grammar(Tokenizer):
             print_str = print_str[1:-1]
 
             return self.__string_parser(print_str, vars_dict, _global_call, new_line=True)
+
+    def __loop_until_for(self, vars_dict, tok_list, _global_call):
+
+        loop_head = ""
+        str_to_ret = ""
+
+        if tok_list[0] == LOOP and tok_list[1] == LEFTCURL:
+            loop_head = WHILE + SPACE + "(1)" + NEWLINE + LEFTCURL
+        
+        elif tok_list[0] == LOOP and tok_list[1] == UNTIL:
+            loop_head = WHILE + SPACE
+            _val, _type = self.__eval_assign_values(vars_dict, tok_list[2:], _global_call, LEFTCURL)
+
+            if tok_list[2] != LEFTBRACK:
+                loop_head += LEFTBRACK
+                str_to_ret += _val + RIGHTBRACK + NEWLINE + LEFTCURL + NEWLINE
+            
+            else:
+                str_to_ret += _val + NEWLINE + LEFTCURL + NEWLINE
+        
+
+        start = tok_list.index(LEFTCURL)+1
+        sub_toks = []
+
+        while start < len(tok_list):
+
+            if tok_list[start] == LOOP:
+                str_to_ret += self.__loop_until_for(vars_dict, tok_list[start:], _global_call)
+                break
+
+            # if tok_list[start] in [IF, ELIF, ELSE]:
+            #     str_to_ret += self.__if_elif_else(vars_dict, tok_list[start:], _global_call)
+            #     break
+
+            elif tok_list[start] == RIGHTCURL:
+                str_to_ret += tok_list[start]
+                start += 1
+
+            elif tok_list[start] != SEMI:
+
+                sub_toks.append(tok_list[start])
+                start += 1
+            
+            elif tok_list[start] == SEMI:
+
+                sub_toks.append(tok_list[start])
+                str_to_ret += self._convert_to_c_str([sub_toks], vars_dict, _global_call)
+                sub_toks.clear()
+
+                start += 1
+
+            
+        return loop_head + str_to_ret
 
 
     # Determine the control type (if/elif/else/loop/loop until)
@@ -496,6 +556,12 @@ class BT_Grammar(Tokenizer):
                         c_str += self.__if_elif_else(vars_dict, toks, _global_call)
 
                         break
+
+                    elif t == LOOP:
+                        c_str += self.__loop_until_for(vars_dict, toks, _global_call)
+                    
+                    elif t == BREAK:
+                        c_str += BREAK + SEMI + NEWLINE
 
 
                     elif t == RETURN:
