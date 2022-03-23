@@ -336,11 +336,17 @@ class BT_Grammar(Tokenizer):
 
     def __sleep(self, vars_dict, tok_list, _global_call):
         _val, _type = self.__eval_assign_values(vars_dict, tok_list, _global_call, SEMI)
-        return f"sleep({_val});\n" 
+        if _val[0] == LEFTBRACK and _val[-1] == RIGHTBRACK:
+            return f"sleep{_val};"
+        else:
+            return f"sleep({_val});\n" 
     
     def __usleep(self, vars_dict, tok_list, _global_call):
         _val, _type = self.__eval_assign_values(vars_dict, tok_list, _global_call, SEMI)
-        return f"usleep({_val});\n"
+        if _val[0] == LEFTBRACK and _val[-1] == RIGHTBRACK:
+            return f"usleep{_val};"
+        else:
+            return f"usleep({_val});\n" 
     
 
     def __func(self, current_func, toks):
