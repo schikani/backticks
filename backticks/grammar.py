@@ -246,9 +246,9 @@ class BT_Grammar(Tokenizer):
                 str_to_ret += self.__loop_until_for(vars_dict, tok_list[start:], _global_call)
                 break
 
-            # if tok_list[start] in [IF, ELIF, ELSE]:
-            #     str_to_ret += self.__if_elif_else(vars_dict, tok_list[start:], _global_call)
-            #     break
+            elif tok_list[start] in [IF, ELIF, ELSE]:
+                str_to_ret += self.__if_elif_else(vars_dict, tok_list[start:], _global_call)
+                break
 
             elif tok_list[start] == RIGHTCURL:
                 str_to_ret += tok_list[start]
@@ -304,6 +304,10 @@ class BT_Grammar(Tokenizer):
             
             if tok_list[start] in [IF, ELIF, ELSE]:
                 str_to_ret += self.__if_elif_else(vars_dict, tok_list[start:], _global_call)
+                break
+
+            elif tok_list[start] == LOOP:
+                str_to_ret += self.__loop_until_for(vars_dict, tok_list[start:], _global_call)
                 break
 
             elif tok_list[start] == RIGHTCURL:

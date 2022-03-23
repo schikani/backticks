@@ -52,6 +52,21 @@ get_age();
 
         }
     }
+    let count = 0;
+    loop until count < 10
+    {
+        if count == 4
+        {
+            printl(`FOUR`);
+        }
+        else
+        {
+            printl(`--------------------`);
+        }
+        printl(`count = [count]`);
+        count = count + 1;
+        usleep(100000);
+    }
 }
 
 let count = 0;
@@ -66,11 +81,6 @@ loop
     usleep(100000);
 }
 
-loop until count > 10 and count < 20
-{
-    count = count + 1;
-    printl(`count = [count]`);
-    usleep(100000);
-}
 
-# check_func();
+
+check_func();
