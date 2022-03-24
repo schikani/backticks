@@ -1,0 +1,24 @@
+let num1 = 4;
+let num2 = 5.789;
+
+let num3: float;
+
+printl(`num1 = [num1] | num2 = [num2] | num3 = [num3]`);
+
+let name = `Shivang`;
+printl(`name = [name]`);
+name += ` Chikani`;
+printl(`name = [name]`);
+
+name = `Hello`;
+printl(`name = [name]`);
+
+num3 += 45;
+
+@ func():
+{
+    name += ` World!`;
+}
+
+func();
+printl(`name = [name]`);

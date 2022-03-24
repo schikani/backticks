@@ -1,9 +1,22 @@
-from lib2to3.pgen2.token import tok_name
-from operator import index
-from tkinter import RIGHT
 from ._tokens import *
 from .tokenizer import Tokenizer
 from .c_templates import *
+
+
+def _new_str(var, _str):
+        str_to_ret = f'{var} = calloc(strlen({_str})+1, sizeof(char));' + NEWLINE
+        str_to_ret += f'strcpy({var}, {_str});' + NEWLINE
+        return str_to_ret
+
+def _concat_str(var, _str):
+    str_to_ret = f'{var} = realloc({var}, (strlen({var}) + strlen({_str}) + 1) * sizeof(char));' + NEWLINE
+    str_to_ret += f'strcat({var}, {_str});' + NEWLINE
+    return str_to_ret
+
+def _free_str(var):
+    str_to_ret = f'free({var});' + NEWLINE
+    str_to_ret += f'{var} = NULL;' + NEWLINE
+    return str_to_ret
 
 
 class BT_Grammar(Tokenizer):
@@ -81,6 +94,7 @@ class BT_Grammar(Tokenizer):
             elif v in vars_dict.keys() or v in self._vars_dict["FUNCS"].keys():
 
                 # Check for function variable name
+                # If it is in global scope or function scope
                 if v in vars_dict.keys():
                     if _global_call:
                         val += self.bin_name + DOT + v
@@ -130,7 +144,7 @@ class BT_Grammar(Tokenizer):
                 val += v
                 int_found = True
             elif self.is_string(v):
-                val += v
+                val += '"' + v[1:-1] + '"'
                 str_found = True
 
             _val_idx += 1
@@ -145,6 +159,49 @@ class BT_Grammar(Tokenizer):
             _type = STR
         
         return (val, _type)
+
+    def __reassign_vals(self, vars_dict, toks, _global_call):
+        
+        t = toks[0]
+        str_to_ret = ''
+
+        # Check for '+=' condition
+        if toks[1] == ADD and toks[2] == EQUALS:
+            val, _type = self.__eval_assign_values(vars_dict, toks[3:toks.index(SEMI)+1], _global_call, SEMI)
+        
+        # '=' condition
+        else:
+            val, _type = self.__eval_assign_values(vars_dict, toks[2:toks.index(SEMI)+1], _global_call, SEMI)
+
+            
+        if _global_call or t in self._vars_dict["GLOBALS"]["global_vars"].keys():
+
+            if toks[1] == ADD and toks[2] == EQUALS:
+                if _type == STR:
+                    str_to_ret += _concat_str(self.bin_name+DOT+t, val)
+                else:
+                    str_to_ret += self.bin_name + DOT + t + ADD + EQUALS + val + SEMI + NEWLINE
+            else:
+                if _type == STR:
+                    str_to_ret += _free_str(self.bin_name+DOT+t)
+                    str_to_ret += _new_str(self.bin_name+DOT+t, val)
+                else:
+                    str_to_ret += self.bin_name + DOT + t + EQUALS + val + SEMI + NEWLINE
+
+        else:
+            if toks[1] == ADD and toks[2] == EQUALS:
+                if _type == STR:
+                    str_to_ret += _concat_str(t, val)
+                else:
+                    str_to_ret += t + ADD + EQUALS + val + SEMI + NEWLINE
+            else:
+                if _type == STR:
+                    str_to_ret += _free_str(t)
+                    str_to_ret += _new_str(t, val)
+                else:
+                    str_to_ret += t + EQUALS + val + SEMI + NEWLINE
+        
+        return str_to_ret
 
 
 
@@ -185,18 +242,24 @@ class BT_Grammar(Tokenizer):
 
                 elif _type == STR:
                     _type = STR
-                    val = ""
+                    val = '""'
 
                 vars_dict[var].append(val)
                 vars_dict[var].append(_type)
 
                 # _val_idx += 1
+            if _type == STR:
+                _type = CHARSTAR
 
             if _global_call:
                 self._global_vars_list.append(f"{_type} {var}")
+                if _type == CHARSTAR:
+                    return _new_str(self.bin_name+DOT+var, val)
                 return f"{self.bin_name}.{var} = {val};\n"
 
             else:
+                if _type == CHARSTAR:
+                    return _new_str(var, val)
                 return f"{_type} {var} = {val};\n"
 
     def __print(self, vars_dict, tok_list, _global_call):
@@ -502,6 +565,9 @@ class BT_Grammar(Tokenizer):
                         elif vars_dict[var][1] == DOUBLE:
                             frmt += "%f"
                         
+                        elif vars_dict[var][1] == STR:
+                            frmt += "%s"
+                        
                         # If global variable
                         if _global_call:
                             values += f", {self.bin_name}.{var}"
@@ -586,13 +652,13 @@ class BT_Grammar(Tokenizer):
                     return ""
 
                 # While reassigning varibles, check for varibale scope or if it is a function
-                elif t in vars_dict.keys() and toks[idx+1] == EQUALS or t in self._vars_dict["GLOBALS"]["global_vars"].keys():
-                    val, _type = self.__eval_assign_values(vars_dict, toks[2:toks.index(SEMI)+1], _global_call, SEMI)
-                    if _global_call or t in self._vars_dict["GLOBALS"]["global_vars"].keys():
-                        c_str += self.bin_name + DOT + t + EQUALS + val + SEMI + NEWLINE
-                    else:
-                        c_str += t + EQUALS + val + SEMI + NEWLINE
+                elif (t in vars_dict.keys() and toks[idx+1] == EQUALS) or\
+                    (t in vars_dict.keys() and toks[idx+1] == ADD and toks[idx+2] == EQUALS) or\
+                    t in self._vars_dict["GLOBALS"]["global_vars"].keys():
+
+                    c_str += self.__reassign_vals(vars_dict, toks, _global_call)
                     break
+
 
                 elif t in self._vars_dict["FUNCS"].keys() and toks[idx+1] == LEFTBRACK:
                     # get function name
