@@ -5,20 +5,24 @@ let num3: float;
 
 printl(`num1 = [num1] | num2 = [num2] | num3 = [num3]`);
 
-let name = `Shivang`;
-printl(`name = [name]`);
-name += ` Chikani`;
-printl(`name = [name]`);
 
-name = `Hello`;
-printl(`name = [name]`);
+let name = `Hello`;
 
-num3 += 45;
+# printl(`name = [name]`);
 
 @ func():
 {
     name += ` World!`;
+    if `Hello World!` == `Hello World!`
+    {
+        printl(`name = [name]`);
+    }
+    
+
+    if num2 == 5.789
+    {
+        printl(`num2`);
+    }
 }
 
 func();
-printl(`name = [name]`);

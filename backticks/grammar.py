@@ -13,6 +13,10 @@ def _concat_str(var, _str):
     str_to_ret += f'strcat({var}, {_str});' + NEWLINE
     return str_to_ret
 
+def _compare_str(var, _str):
+    str_to_ret = f'strcmp({var}, {_str})'
+    return str_to_ret
+
 def _free_str(var):
     str_to_ret = f'free({var});' + NEWLINE
     str_to_ret += f'{var} = NULL;' + NEWLINE
@@ -59,7 +63,10 @@ class BT_Grammar(Tokenizer):
         self._vars_dict["FUNCS"] = {}
 
 
+    def __bt_to_c_str(self, _str):
+        _str = '"' + _str[1:-1] + '"'
 
+        return _str
 
 
     def __eval_assign_values(self, vars_dict, tok_list, _global_call, _del):
@@ -74,12 +81,61 @@ class BT_Grammar(Tokenizer):
 
         # if tok_list[0] not in [IF, ELIF, ELSE, PRINT, PRINTL, SLEEP, USLEEP]:
 
+        str1 = ""
+        str2 = ""
+
         while tok_list[_val_idx] != _del:
 
             v = tok_list[_val_idx]
 
-            if self.is_operator(v):
-                val += v
+            if self.is_operator(v) or self.is_string(v):
+                if self.is_string(v) and tok_list[_val_idx+1] == EQUALS and tok_list[_val_idx+2] == EQUALS:
+                    pass
+
+                elif self.is_string(v): 
+                    val += self.__bt_to_c_str(v)
+                    str_found = True
+
+                elif v == EQUALS and tok_list[_val_idx+1] == EQUALS:
+                    if not self.is_string(tok_list[_val_idx+2]):
+                        val += EQUALS
+
+                    
+                    # When two strings are compared
+                    else:
+                        str1 = tok_list[_val_idx-1]
+                        str2 = tok_list[_val_idx+2]
+
+                        if self.is_string(str1):
+                            str1 = self.__bt_to_c_str(str1)
+
+                        elif str1 in vars_dict.keys():
+                            if _global_call:
+                                str1 = self.bin_name + DOT + str1
+                        
+                        elif str1 in self._vars_dict["GLOBALS"]["global_vars"].keys():
+                            str1 = self.bin_name + DOT + str1
+
+                        if self.is_string(str2):
+                            str2 = self.__bt_to_c_str(str2)
+                        
+                        elif str2 in vars_dict.keys():
+                            if _global_call:
+                                str2 = self.bin_name + DOT + str2
+                        
+                        elif str2 in self._vars_dict["GLOBALS"]["global_vars"].keys():
+                            str2 = self.bin_name + DOT + str2
+                        
+                        val += _compare_str(str1, str2) + EQUALS + EQUALS + ZERO
+
+                        _val_idx += 3
+                        continue
+                
+
+
+                else:
+                    val += v
+
 
             elif v in [LEFTBRACK, RIGHTBRACK, LEFTCURL, RIGHTCURL]:
                 val += v
@@ -96,11 +152,6 @@ class BT_Grammar(Tokenizer):
                 # Check for function variable name
                 # If it is in global scope or function scope
                 if v in vars_dict.keys():
-                    if _global_call:
-                        val += self.bin_name + DOT + v
-
-                    else:
-                        val += v
 
                     if vars_dict[v][1] == DOUBLE:
                         float_found = True
@@ -110,10 +161,18 @@ class BT_Grammar(Tokenizer):
 
                     elif vars_dict[v][1] == STR:
                         str_found = True
+                    
+                    
+                    if _global_call:
+                        if not str_found:
+                            val += self.bin_name + DOT + v
+
+                    else:
+                        if not str_found:
+                            val += v
                 
                 # Check for function name
                 elif v in self._vars_dict["FUNCS"].keys():
-                    val += v
 
                     if self._vars_dict["FUNCS"][v][0][1] == DOUBLE:
                         float_found = True
@@ -123,11 +182,13 @@ class BT_Grammar(Tokenizer):
 
                     elif self._vars_dict["FUNCS"][v][0][1] == STR:
                         str_found = True
+                    
+                    # if not str_found:
+                    val += v
 
             
             elif v in self._vars_dict["GLOBALS"]["global_vars"].keys():
 
-                val += self.bin_name + DOT + v
                 if self._vars_dict["GLOBALS"]["global_vars"][v][1] == DOUBLE:
                     float_found = True
 
@@ -136,6 +197,10 @@ class BT_Grammar(Tokenizer):
 
                 elif self._vars_dict["GLOBALS"]["global_vars"][v][1] == STR:
                     str_found = True
+                
+                if not str_found:
+                    val += self.bin_name + DOT + v
+
 
             elif self.is_float(v):
                 val += v
@@ -143,9 +208,9 @@ class BT_Grammar(Tokenizer):
             elif self.is_int(v):
                 val += v
                 int_found = True
-            elif self.is_string(v):
-                val += '"' + v[1:-1] + '"'
-                str_found = True
+            # elif self.is_string(v):
+            #     val += self.__bt_to_c_str(v)
+            #     str_found = True
 
             _val_idx += 1
 
@@ -580,8 +645,12 @@ class BT_Grammar(Tokenizer):
                         # Type
                         if self._vars_dict["GLOBALS"]["global_vars"][var][1] == LONG:
                             frmt += "%ld"
+
                         elif self._vars_dict["GLOBALS"]["global_vars"][var][1] == DOUBLE:
                             frmt += "%f"
+
+                        elif self._vars_dict["GLOBALS"]["global_vars"][var][1] == STR:
+                            frmt += "%s"
                         
                         values += f", {self.bin_name}.{var}"
                     
