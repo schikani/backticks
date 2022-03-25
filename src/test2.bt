@@ -1,28 +1,28 @@
-let num1 = 4;
-let num2 = 5.789;
-
-let num3: float;
-
-printl(`num1 = [num1] | num2 = [num2] | num3 = [num3]`);
-
-
-let name = `Hello`;
-
-# printl(`name = [name]`);
-
-@ func():
+@ print_screen():
 {
-    name += ` World!`;
-    if `Hello World!` == `Hello World!`
-    {
-        printl(`name = [name]`);
-    }
-    
 
-    if num2 == 5.789
+    let count = 0;
+    loop until (count < 6)
     {
-        printl(`num2`);
+        if count == 0 or count == 5
+        {
+            printl(`**********************************`);
+        }
+        elif count == 2
+        {
+            printl(`*       HELLO                    *`);
+        }
+        elif count == 3
+        {
+            printl(`*             WORLD              *`);
+        }
+        else
+        {
+            printl(`*                                *`);
+        }
+
+        count += 1;
     }
 }
 
-func();
+print_screen();

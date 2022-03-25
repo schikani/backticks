@@ -1,3 +1,4 @@
+from lib2to3.pgen2.token import SLASH
 from ._tokens import *
 from .lexer import Lexer
 
@@ -11,11 +12,11 @@ class Tokenizer(Lexer):
         self.c_file_name = self.bin_name + ".c"
         self.h_file_name = self.bin_name + ".h"
         self.tokens = []
-        try:
-            self.__tokenizer()
-        except IndexError:
-            print("Error Occured")
-            print(f"Total Lines: {self.current_line_no}")
+        # try:
+        self._tokenizer()
+        # except IndexError:
+        #     print("Error Occured")
+        #     print(f"Total Lines: {self.current_line_no}")
             
         
     def __read_sc_file(self):
@@ -25,94 +26,114 @@ class Tokenizer(Lexer):
             return sc
 
     
-    def __tokenizer(self):
-        buf = self.__read_sc_file()
+    def _tokenizer(self, buf=None):
+        from_file = False
+        if buf == None:
+            from_file = True
+            buf = self.__read_sc_file()
+        
+
         length = len(buf)
         left = 0
         right = 0
 
         tokens = []
 
-        try:
-            while (right < length):
-                
-                
-                # COMMENTS
+        while (right < length):
+            
+            
+            # COMMENTS
 
-                # Single line
-                if buf[right] == COMMENT:
-                    self.current_line_no += 1
+            # Single line
+            if buf[right] == COMMENT:
+                self.current_line_no += 1
+                right += 1
+                while right < length and buf[right] != NEWLINE:
                     right += 1
-                    while (buf[right] != NEWLINE and right < length):
-                        right += 1
 
-                    if right < length:
+                if right < length:
+                    right += 1
+                    
+                left = right
+            
+            elif buf[right] == SLASH and buf[right+1] == COMMENT:
+                self.current_line_no += 1
+                right += 2
+
+                while right < length - 1 and (buf[right] != COMMENT and buf[right+1] != SLASH):
+                    right += 1
+
+                    if buf[right] == NEWLINE:
+                        self.current_line_no += 1
+                
+                if right < length - 1:
+                    right += 2
+
+                left = right
+            
+                
+            else:
+
+                # When string is found
+                if buf[right] == TICK:
+                    # left = right
+
+                    right += 1
+
+                    while right < length:
+                        if buf[right] == TICK and buf[right-1] != BACKSLASH:
+                            break
                         right += 1
-                        
+                    right += 1
+
+                    sub_str = self.sub_string(buf, left, right)
+
+                    # Replace "\`" with "`"
+                    sub_str = sub_str.replace(BACKTICK, TICK)
+                    # print(sub_str)
+                    # print("\n")
+                    tokens.append(sub_str)
+                    left = right+1
+
+                # Simply increament if delimiter not found
+                # print(right)
+                if not self.is_delimiter(buf[right]):
+                    right += 1
+
+
+                if self.is_delimiter(buf[right]) and left == right:
+                    
+                    if buf[right] == NEWLINE:
+                        self.current_line_no += 1
+
+                    elif buf[right] == LEFTCURL or buf[right] == RIGHTCURL or\
+                        buf[right] == LEFTBRACK or buf[right] == RIGHTBRACK or\
+                        buf[right] == SEMI:
+                        tokens.append(buf[right])
+
+                    elif self.is_operator(buf[right]):
+                        tokens.append(buf[right])
+                    
+                    right += 1
                     left = right
 
-                else:
+                # Extract substring
+                elif self.is_delimiter(buf[right]) and left != right or (right == length and left != right):
+                    sub_str = self.sub_string(buf, left, right)
+                    tokens.append(sub_str)
 
-                    # When string is found
-                    if buf[right] == TICK:
-                        # left = right
-
-                        right += 1
-
-                        while right < length:
-                            if buf[right] == TICK and buf[right-1] != BACKSLASH:
-                                break
-                            right += 1
-                        right += 1
-
-                        sub_str = self.sub_string(buf, left, right)
-
-                        # Replace "\`" with "`"
-                        sub_str = sub_str.replace(BACKTICK, TICK)
-                        # print(sub_str)
-                        # print("\n")
-                        tokens.append(sub_str)
-                        left = right+1
-
-                    # Simply increament if delimiter not found
-                    # print(right)
-                    if not self.is_delimiter(buf[right]):
-                        right += 1
-
-
-                    if self.is_delimiter(buf[right]) and left == right:
-                        
-                        if buf[right] == NEWLINE:
-                            self.current_line_no += 1
-
-                        elif buf[right] == LEFTCURL or buf[right] == RIGHTCURL or\
-                            buf[right] == LEFTBRACK or buf[right] == RIGHTBRACK or\
-                            buf[right] == SEMI:
-                            tokens.append(buf[right])
-
-                        elif self.is_operator(buf[right]):
-                            tokens.append(buf[right])
-                        
-                        right += 1
-                        left = right
-
-                    # Extract substring
-                    elif self.is_delimiter(buf[right]) and left != right or (right == length and left != right):
-                        sub_str = self.sub_string(buf, left, right)
-                        tokens.append(sub_str)
-
-                        left = right
-
-        except IndexError:
-            print(f"Current Line: {self.current_line_no}")
+                    left = right
 
         
         # Remove empty strings
         for i in tokens:
             if i == "":
                 tokens.pop(tokens.index(i))
+        
+        # print(tokens)
 
-        try:
+        if from_file:
+            # try:
             count = 0
             while (count < len(tokens)):
                 if tokens[count] in [FUNCTION, PUB_FUNC, IF, ELIF, ELSE, LOOP]:
@@ -124,7 +145,7 @@ class Tokenizer(Lexer):
                         if tokens[count] == RIGHTCURL:
                             funcs.append(tokens[count])
                             closing -= 1
-    
+
                             if closing <= 0:
                                 break
                             else:
@@ -160,8 +181,12 @@ class Tokenizer(Lexer):
                     self.tokens.append(non_func)
                     count += 1
 
-            # for i in self.tokens:
-            #     print(i)
-        except IndexError:
-            print(f"Current Line: {self.current_line_no}")
+                # for i in self.tokens:
+                #     print(i)
+
+            # except IndexError:
+                # print(f"Current Line: {self.current_line_no}")
+
+        else:
+            return tokens
 

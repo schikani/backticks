@@ -31,6 +31,8 @@ f"""
 #include <math.h>
 #include <unistd.h>
 
+// # pragma GCC diagnostic ignored "-Wformat"
+
 typedef struct
 {{
 

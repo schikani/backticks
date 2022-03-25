@@ -74,7 +74,18 @@ class Lexer:
                 return False
         return False
 
-    def is_string(self, string):
-        if string[0] == TICK and string[-1] == TICK:
+    def is_string(self, string, vars_dict=None, func=False):
+        if func:
+            if string in vars_dict:
+                if vars_dict[string][0][1] == STR:
+                    return True
+                    
+        elif vars_dict:
+            if string in vars_dict:
+                if vars_dict[string][1] == STR:
+                    return True
+
+        elif string[0] == TICK and len(string) > 1 and string[-1] == TICK:
             return True
+
         return False

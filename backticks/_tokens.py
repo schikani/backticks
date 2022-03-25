@@ -1,4 +1,4 @@
-# Escape Sequence chars
+
 BACKTICK        =     '\`'
 BEEP            =     '\a'
 BACKSPACE       =     '\b'	
@@ -19,6 +19,7 @@ NULL            =     '\0'
 
 SPACE           =     ' '
 NEWLINE         =     '\n'
+TAB             =     '\t'
 DOT             =     '.'
 COMA            =     ','
 SEMI            =     ';'
@@ -31,10 +32,12 @@ LEFTSQUARE      =     '['
 RIGHTSQUARE     =     ']'
 FUNCTION        =     '@'
 PUB_FUNC        =     '<'
-QUOTE           =     '"'
+D_QUOTE         =     '"'
+S_QUOTE         =     "'"
 TICK            =     '`'
 
 COMMENT         =     '#'
+SLASH           =     '/'
 
 EQUALS      =          '='
 ADD         =          '+'
