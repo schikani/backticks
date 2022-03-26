@@ -1,4 +1,3 @@
-from ast import Add, Eq, operator
 from ._tokens import *
 from .tokenizer import Tokenizer
 from .c_templates import *
@@ -116,7 +115,6 @@ class BT_Grammar(Tokenizer):
                 tok_list = self._tokenizer(tok_list[0]+SEMI)
                 # print(tok_list)
 
-
         while tok_list[_val_idx] != _del:
 
             v = tok_list[_val_idx]
@@ -124,7 +122,7 @@ class BT_Grammar(Tokenizer):
             if self.is_operator(v) or self.is_string(v) or self.is_string(v, vars_dict) or\
                     self.is_string(v, self._vars_dict["GLOBALS"]["global_vars"]) or\
                     self.is_string(v, self._vars_dict["FUNCS"], func=True):
-                
+
                 str1 = ""
                 str2 = ""
 
@@ -190,10 +188,8 @@ class BT_Grammar(Tokenizer):
                     val += v
                     str_found = True
 
-
                 else:
                     val += v
-            
 
             elif v in [LEFTBRACK, RIGHTBRACK, LEFTCURL, RIGHTCURL]:
                 val += v
@@ -293,14 +289,14 @@ class BT_Grammar(Tokenizer):
                 vars_dict, toks[2:toks.index(SEMI)+1], _global_call, SEMI)
 
         if not _global_call and t in vars_dict.keys():
-            
+
             # String or Number
             if toks[1] == ADD and toks[2] == EQUALS:
                 if _type == STR:
                     str_to_ret += _concat_str(t, val)
                 else:
                     str_to_ret += t + ADD + EQUALS + val + SEMI + NEWLINE
-            
+
             # Number
             elif toks[1] in [SUB, MUL, DIV] and toks[2] == EQUALS:
                 str_to_ret += t + toks[1] + EQUALS + val + SEMI + NEWLINE
@@ -321,10 +317,11 @@ class BT_Grammar(Tokenizer):
                     str_to_ret += _concat_str(self.bin_name+DOT+t, val)
                 else:
                     str_to_ret += self.bin_name + DOT + t + ADD + EQUALS + val + SEMI + NEWLINE
-            
+
             # Number
             elif toks[1] in [SUB, MUL, DIV] and toks[2] == EQUALS:
-                str_to_ret += self.bin_name + DOT + t + toks[1] + EQUALS + val + SEMI + NEWLINE
+                str_to_ret += self.bin_name + DOT + t + \
+                    toks[1] + EQUALS + val + SEMI + NEWLINE
 
             # Case '='
             else:
@@ -470,6 +467,9 @@ class BT_Grammar(Tokenizer):
 
     def __if_elif_else(self, vars_dict, tok_list, _global_call):
 
+        single_line = False
+        left_brack = ""
+        right_brack = ""
         str_to_ret = ""
 
         if tok_list[0] in [IF, ELIF, ELSE]:
@@ -479,22 +479,50 @@ class BT_Grammar(Tokenizer):
         if tok_list[0] != ELSE:
 
             if tok_list[1] != LEFTBRACK:
-                str_to_ret += tok_list[0] + SPACE + LEFTBRACK
-                _val, _type = self.__eval_assign_values(
-                    vars_dict, tok_list[1:], _global_call, LEFTCURL)
-                str_to_ret += _val + RIGHTBRACK + NEWLINE + LEFTCURL + NEWLINE
+                left_brack = LEFTBRACK
+                right_brack = RIGHTBRACK
+                
+            str_to_ret += tok_list[0] + SPACE + left_brack
 
-            else:
-                str_to_ret += tok_list[0] + SPACE
+            # Multi-line body
+            if LEFTCURL in tok_list[1:]:
                 _val, _type = self.__eval_assign_values(
                     vars_dict, tok_list[1:], _global_call, LEFTCURL)
-                str_to_ret += _val + NEWLINE + LEFTCURL + NEWLINE
+
+                str_to_ret += _val + right_brack + NEWLINE + LEFTCURL + NEWLINE
+            
+            # @ TODO
+            # # Single-line body
+            # else:
+            #     single_line = True
+            #     _idx = tok_list[1:].index(SEMI)
+            #     _val, _type = self.__eval_assign_values(
+            #         vars_dict, tok_list[1:_idx+1], _global_call, tok_list[_idx])
+            #     str_to_ret += _val + right_brack + \
+            #         SPACE + tok_list[_idx] + SEMI + NEWLINE
+                
+
+        # Else Condition
+        else:
+            # Multi-line body
+            if LEFTCURL in tok_list[1:]:
+                str_to_ret += tok_list[0] + SPACE + LEFTCURL + NEWLINE
+            
+            # @ TODO
+            # # Single-line body
+            # else:
+            #     single_line = True
+            #     _val, _type = self.__eval_assign_values(vars_dict, tok_list[1:], _global_call, SEMI)
+            #     str_to_ret += tok_list[0] + SPACE + _val + SEMI + NEWLINE
+
+
+        if not single_line:
+            start = tok_list.index(LEFTCURL)+1
+            sub_toks = []
 
         else:
-            str_to_ret += tok_list[0] + SPACE + LEFTCURL + NEWLINE
-
-        start = tok_list.index(LEFTCURL)+1
-        sub_toks = []
+            start = tok_list.index(SEMI)+1
+            sub_toks = []
 
         while start < len(tok_list):
 
@@ -706,8 +734,7 @@ class BT_Grammar(Tokenizer):
                             frmt += "%d"
                         else:
                             frmt += "%ld"
-                        
-                        
+
                     elif _type == DOUBLE:
                         frmt += "%f"
                     elif _type == STR:
@@ -847,9 +874,9 @@ class BT_Grammar(Tokenizer):
 
                 # While reassigning varibles, check for varibale scope or if it is a function
                 elif (t in vars_dict.keys() and toks[idx+1] == EQUALS) or\
-                    (t in vars_dict.keys() and toks[idx+1] in [ADD,SUB,MUL,DIV] and toks[idx+2] == EQUALS) or\
+                    (t in vars_dict.keys() and toks[idx+1] in [ADD, SUB, MUL, DIV] and toks[idx+2] == EQUALS) or\
                     (t in self._vars_dict["GLOBALS"]["global_vars"].keys() and toks[idx+1] == EQUALS) or\
-                    (t in self._vars_dict["GLOBALS"]["global_vars"].keys() and toks[idx+1] in [ADD,SUB,MUL,DIV] and toks[idx+2] == EQUALS):
+                        (t in self._vars_dict["GLOBALS"]["global_vars"].keys() and toks[idx+1] in [ADD, SUB, MUL, DIV] and toks[idx+2] == EQUALS):
 
                     c_str += self.__reassign_vals(vars_dict,
                                                   toks, _global_call)
