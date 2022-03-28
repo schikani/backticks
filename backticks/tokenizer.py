@@ -1,4 +1,3 @@
-from lib2to3.pgen2.token import SLASH
 from ._tokens import *
 from .lexer import Lexer
 
