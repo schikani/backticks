@@ -3,14 +3,14 @@ from ._tokens import *
 from .lexer import Lexer
 
 class Tokenizer(Lexer):
-    def __init__(self, bt_file_name):
+    def __init__(self, bt_file_path):
         super().__init__()
-        self.bt_file_name = bt_file_name
+        self.bt_file_path = bt_file_path
+        self.bt_file_name = ""
+        self.bin_name = ""
+        self.c_file_name = ""
+        self.h_file_name = ""
         self.current_line_no = 0
-
-        self.bin_name = self.bt_file_name[:self.bt_file_name.find(".bt")]
-        self.c_file_name = self.bin_name + ".c"
-        self.h_file_name = self.bin_name + ".h"
         self.tokens = []
         # try:
         self._tokenizer()
@@ -20,9 +20,17 @@ class Tokenizer(Lexer):
             
         
     def __read_sc_file(self):
-        with open(self.bt_file_name, "r") as sc_read:
+        
+        with open(self.bt_file_path, "r") as sc_read:
             sc = sc_read.read()
             sc += "\n"
+
+            self.bt_file_name = self.bt_file_path[self.bt_file_path.rfind("/")+1:]
+        
+            self.bin_name = self.bt_file_name[:self.bt_file_name.find(".bt")]
+            self.c_file_name = self.bin_name + ".c"
+            self.h_file_name = self.bin_name + ".h"
+
             return sc
 
     
@@ -174,7 +182,15 @@ class Tokenizer(Lexer):
                 else:
                     non_func = []
                     while tokens[count] != SEMI:
-                        non_func.append(tokens[count])
+                        if tokens[count] != IMPORT:
+                            non_func.append(tokens[count])
+                        else:
+                            non_func.append(tokens[count])
+                            if tokens[count+2] == AS:
+                                if tokens[count+4] != SEMI:
+                                    tokens.insert(count+4, SEMI)
+                            elif tokens[count+2] != SEMI:
+                                tokens.insert(count+2, SEMI)
                         count += 1
                         
                     non_func.append(tokens[count])

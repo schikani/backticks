@@ -2,7 +2,6 @@ from ._tokens import *
 from .tokenizer import Tokenizer
 from .c_templates import *
 
-
 def _new_str(var, _str):
 
     _s = ""
@@ -57,13 +56,16 @@ def _free_str(var):
 
 
 class BT_Grammar(Tokenizer):
-    def __init__(self, bt_file_name):
-        super().__init__(bt_file_name)
+    def __init__(self, bt_file_path):
+        super().__init__(bt_file_path)
         self._vars_dict = dict()
+        self._imports_dict = dict()
         self._global_vars_list = []
         self._private_func_list = []
         self._public_func_list = []
         self._funcs_impl = []
+        self._includes = []
+        self._includes.append('#include "_bt_inbuilts_.h"')
 
         '''
                       GLOBAL VARIABLES
@@ -114,14 +116,25 @@ class BT_Grammar(Tokenizer):
             if tok_list[1] == tuple():
                 tok_list = self._tokenizer(tok_list[0]+SEMI)
                 # print(tok_list)
+                # for idx, t in enumerate(tok_list):
+                #     if t.find(DOT) != -1:
+                #         tl = t.split(DOT)
+                #         if tl[0] in self._imports_dict:
+                #             tok_list[idx] = self._imports_dict[tl[0]] + DOT + tl[1]
+
 
         while tok_list[_val_idx] != _del:
 
             v = tok_list[_val_idx]
 
+
+            if self._in_func_names(v):
+                v = self._in_func_names(v)
+
             if self.is_operator(v) or self.is_string(v) or self.is_string(v, vars_dict) or\
                     self.is_string(v, self._vars_dict["GLOBALS"]["global_vars"]) or\
                     self.is_string(v, self._vars_dict["FUNCS"], func=True):
+                
 
                 str1 = ""
                 str2 = ""
@@ -136,30 +149,69 @@ class BT_Grammar(Tokenizer):
                         str2 = tok_list[_val_idx+3]
 
                     if self.is_string(str1):
+                        # print("~"+str1+"~")
+
                         str1 = self.__bt_to_c_str(str1)
 
                     elif self.is_string(str1, vars_dict):
+                        # print("~"+str1+"~")
                         if _global_call:
-                            str1 = self.bin_name + DOT + str1
+                            if str1.find(DOT) == -1:
+                                str1 = self.bin_name + DOT + str1
+                            else:
+                                sl = str1.split(DOT)
+                                if sl[0] in self._imports_dict:
+                                    str1 = self._imports_dict[sl[0]] + DOT + sl[1]
+
 
                     elif self.is_string(str1, self._vars_dict["GLOBALS"]["global_vars"]):
+                        # print("~"+str1+"~")
+
                         str1 = self.bin_name + DOT + str1
+                        # print(str1)
 
                     elif self.is_string(str1, self._vars_dict["FUNCS"], func=True):
+                        # print("~"+str1+"~")
+                        if str1.find(DOT) != -1:
+                            sl = str1.split(DOT)
+                            if sl[0] in self._imports_dict:
+                                str1 = sl[1] + "_" + self._imports_dict[sl[0]]
+                    
                         str1 += LEFTBRACK + RIGHTBRACK
                         _val_idx += 2
+                        
 
                     if self.is_string(str2):
+                        # print("~"+str2+"~")
+
                         str2 = self.__bt_to_c_str(str2)
 
                     elif self.is_string(str2, vars_dict):
+                        # print("~"+str2+"~")
+
                         if _global_call:
-                            str2 = self.bin_name + DOT + str2
+                            if str2.find(DOT) == -1:
+                                str2 = self.bin_name + DOT + str2
+                            else:
+                                sl = str2.split(DOT)
+                                if sl[0] in self._imports_dict:
+                                    str2 = self._imports_dict[sl[0]] + DOT + sl[1]
 
                     elif self.is_string(str2, self._vars_dict["GLOBALS"]["global_vars"]):
-                        str2 = self.bin_name + DOT + str2
+                        if str2.find(DOT) == -1:
+                            str2 = self.bin_name + DOT + str2
+                        else:
+                            sl = str2.split(DOT)
+                            if sl[0] in self._imports_dict:
+                                str2 = self._imports_dict[sl[0]] + DOT + sl[1]
 
                     elif self.is_string(str2, self._vars_dict["FUNCS"], func=True):
+                        # print("~"+str2+"~")
+                        if str2.find(DOT) != -1:
+                            sl = str2.split(DOT)
+                            if sl[0] in self._imports_dict:
+                                str2 = sl[1] + "_" + self._imports_dict[sl[0]]
+                    
                         str2 += LEFTBRACK + RIGHTBRACK
                         _val_idx += 2
 
@@ -169,26 +221,54 @@ class BT_Grammar(Tokenizer):
                     continue
 
                 elif self.is_string(v):
+                    # print("~"+v+"~")
+
                     val += self.__bt_to_c_str(v)
                     str_found = True
 
                 elif self.is_string(v, vars_dict):
+
                     if _global_call:
-                        val += self.bin_name + DOT + v
+                        if v.find(DOT) == -1:
+                            val += self.bin_name + DOT + v
+                        else:
+                            vl = v.split(DOT)
+                            if vl[0] in self._imports_dict:
+                                val += self._imports_dict[vl[0]] + DOT + vl[1]
+
                     else:
+                        # print("~"+v+"~")
                         val += v
 
                     str_found = True
 
                 elif self.is_string(v, self._vars_dict["GLOBALS"]["global_vars"]):
-                    val += self.bin_name + DOT + v
+
+                    if v.find(DOT) == -1:
+                            val += self.bin_name + DOT + v
+                    else:
+                        # print("~"+v+"~")
+                        vl = v.split(DOT)
+                        if vl[0] in self._imports_dict:
+                            val += self._imports_dict[vl[0]] + DOT + vl[1]
+                    
                     str_found = True
+
 
                 elif self.is_string(v, self._vars_dict["FUNCS"], func=True):
-                    val += v
+                    if v.find(DOT) == -1:
+                        val += v
+                    else:
+                        # print("~"+v+"~")
+                        vl = v.split(DOT)
+                        if vl[0] in self._imports_dict:
+                            val += vl[1] + "_" + self._imports_dict[vl[0]]
+
                     str_found = True
 
+
                 else:
+                    # print(v)
                     val += v
 
             elif v in [LEFTBRACK, RIGHTBRACK, LEFTCURL, RIGHTCURL]:
@@ -202,6 +282,7 @@ class BT_Grammar(Tokenizer):
                     val += " || "
 
             elif v in vars_dict.keys() or v in self._vars_dict["FUNCS"].keys():
+                # print(v)
 
                 # Check for function variable name
                 # If it is in global scope or function scope
@@ -218,14 +299,22 @@ class BT_Grammar(Tokenizer):
 
                     if _global_call:
                         if not str_found:
-                            val += self.bin_name + DOT + v
+                            if v.find(DOT) == -1:
+                                val += self.bin_name + DOT + v
+                            else:
+                                vl = v.split(DOT)
+                                if vl[0] in self._imports_dict:
+                                    val += self._imports_dict[vl[0]] + DOT + vl[1]
 
                     else:
+                        # print(v)
                         if not str_found:
                             val += v
 
                 # Check for function name
                 elif v in self._vars_dict["FUNCS"].keys():
+                    # print(v)
+
 
                     if self._vars_dict["FUNCS"][v][0][1] == DOUBLE:
                         float_found = True
@@ -236,10 +325,17 @@ class BT_Grammar(Tokenizer):
                     elif self._vars_dict["FUNCS"][v][0][1] == STR:
                         str_found = True
 
-                    # if not str_found:
-                    val += v
+                    if v.find(DOT) == -1:
+                        val += v
+                    else:
+                        # print(v)
+                        vl = v.split(DOT)
+                        if vl[0] in self._imports_dict:
+                            val += vl[1] + "_" + self._imports_dict[vl[0]]
+
 
             elif v in self._vars_dict["GLOBALS"]["global_vars"].keys():
+                # print(v)
 
                 if self._vars_dict["GLOBALS"]["global_vars"][v][1] == DOUBLE:
                     float_found = True
@@ -251,7 +347,14 @@ class BT_Grammar(Tokenizer):
                     str_found = True
 
                 if not str_found:
-                    val += self.bin_name + DOT + v
+                    if v.find(DOT) == -1:
+                        val += self.bin_name + DOT + v
+                    else:
+                        vl = v.split(DOT)
+                        if vl[0] in self._imports_dict:
+                            val += self._imports_dict[vl[0]] + DOT + vl[1]
+
+                    # val += self.bin_name + DOT + v
 
             elif self.is_float(v):
                 val += v
@@ -270,26 +373,83 @@ class BT_Grammar(Tokenizer):
 
         elif int_found:
             _type = LONG
+        
+        
+        # print(val, _type)
 
         return (val, _type)
 
     def __reassign_vals(self, vars_dict, toks, _global_call):
 
         t = toks[0]
+        # print(toks)
+        
         str_to_ret = ''
 
         # Check for '+=', '-=', '*=', '\=' condition
         if toks[1] in [ADD, SUB, MUL, DIV] and toks[2] == EQUALS:
+
+            if self._in_func_names(toks[3]):
+                toks[3] = self._in_func_names(toks[3])
+            
+            # else:
+            #     print(toks[3])
+
             val, _type = self.__eval_assign_values(
                 vars_dict, toks[3:toks.index(SEMI)+1], _global_call, SEMI)
 
         # '=' condition
         else:
+            if self._in_func_names(toks[2]):
+                toks[2] = self._in_func_names(toks[2])
+
+            else:
+                if toks[2].find(DOT) != -1:
+                    l = toks[2].split(DOT)
+                    if l[0] in self._imports_dict:
+                        toks[2] = l[1] + "_" + self._imports_dict[l[0]]
+                # print(toks[2])
+
             val, _type = self.__eval_assign_values(
                 vars_dict, toks[2:toks.index(SEMI)+1], _global_call, SEMI)
 
         if not _global_call and t in vars_dict.keys():
 
+            # String or Number
+            if toks[1] == ADD and toks[2] == EQUALS:
+                if _type == STR:
+                    # print("~"+t+"~")
+                    str_to_ret += _concat_str(t, val)
+                else:
+                    str_to_ret += t + ADD + EQUALS + val + SEMI + NEWLINE
+
+            # Number
+            elif toks[1] in [SUB, MUL, DIV] and toks[2] == EQUALS:
+                str_to_ret += t + toks[1] + EQUALS + val + SEMI + NEWLINE
+
+            # Case '='
+            else:
+                if _type == STR:
+                    str_to_ret += _free_str(t)
+                    str_to_ret += _new_str(t, val)
+                else:
+                    # print(t)
+                    str_to_ret += t + EQUALS + val + SEMI + NEWLINE
+
+        elif _global_call or t in self._vars_dict["GLOBALS"]["global_vars"] or t in self._vars_dict["FUNCS"]:
+            
+            if t.find(DOT) == -1:                
+                t = self.bin_name + DOT + t
+
+            else:
+                # print(t)
+                tl = t.split(DOT)
+
+                # Write correct file name from alias `t3.count = test3.count`
+                if t in self._vars_dict["GLOBALS"]["global_vars"]:
+                    t = self._imports_dict[tl[0]] + DOT + tl[1]                
+
+            
             # String or Number
             if toks[1] == ADD and toks[2] == EQUALS:
                 if _type == STR:
@@ -307,29 +467,12 @@ class BT_Grammar(Tokenizer):
                     str_to_ret += _free_str(t)
                     str_to_ret += _new_str(t, val)
                 else:
+                    # print(t)
+                        # str_to_ret += self.bin_name + DOT + t + EQUALS + val + SEMI + NEWLINE
+                    # else:
                     str_to_ret += t + EQUALS + val + SEMI + NEWLINE
-
-        elif _global_call or t in self._vars_dict["GLOBALS"]["global_vars"].keys():
-
-            # String or Number
-            if toks[1] == ADD and toks[2] == EQUALS:
-                if _type == STR:
-                    str_to_ret += _concat_str(self.bin_name+DOT+t, val)
-                else:
-                    str_to_ret += self.bin_name + DOT + t + ADD + EQUALS + val + SEMI + NEWLINE
-
-            # Number
-            elif toks[1] in [SUB, MUL, DIV] and toks[2] == EQUALS:
-                str_to_ret += self.bin_name + DOT + t + \
-                    toks[1] + EQUALS + val + SEMI + NEWLINE
-
-            # Case '='
-            else:
-                if _type == STR:
-                    str_to_ret += _free_str(self.bin_name+DOT+t)
-                    str_to_ret += _new_str(self.bin_name+DOT+t, val)
-                else:
-                    str_to_ret += self.bin_name + DOT + t + EQUALS + val + SEMI + NEWLINE
+        # else:
+        #     print(t)
 
         return str_to_ret
 
@@ -350,6 +493,13 @@ class BT_Grammar(Tokenizer):
             assign = tok_list[1]
 
             if assign == EQUALS:
+
+                if self._in_func_names(tok_list[2]):
+                    tok_list[2] = self._in_func_names(tok_list[2])
+                
+                # elif 
+
+                #     print(tok_list[2])
 
                 val, _type = self.__eval_assign_values(
                     vars_dict, tok_list[2:], _global_call, SEMI)
@@ -571,9 +721,16 @@ class BT_Grammar(Tokenizer):
             return f"usleep{_val};"
         else:
             return f"usleep({_val});\n"
+    
+    def _in_func_names(self, name):
+        if name + "_" + self.bin_name in self._vars_dict["FUNCS"]:
+            return name + "_" + self.bin_name
+        return False
 
     def __func(self, current_func, toks):
         c_func_params = ""
+
+        current_func += "_" + self.bin_name
 
         if not current_func in self._vars_dict["FUNCS"]:
             self._vars_dict["FUNCS"].update({current_func: [(), {}]})
@@ -834,7 +991,59 @@ class BT_Grammar(Tokenizer):
         for toks in tokens:
             for idx, t in enumerate(toks):
 
-                if t == FUNCTION or t == PUB_FUNC:
+                if self._in_func_names(t):
+                    t = self._in_func_names(t)
+                
+                if t == IMPORT:
+
+                    from .bt_to_c import BT_to_C
+
+                    import_name = toks[idx+1]
+                    imp_file_path = self.bt_file_path[:self.bt_file_path.rindex("/")+1] + import_name + ".bt"
+                    source = BT_to_C(imp_file_path, main_file=False)
+
+                    self._includes.append(f'#include "{import_name}.h"')
+                    c_str += f"main_{import_name}(argc, argv);" + NEWLINE
+
+                    import_alias = import_name
+                    if toks[idx+2] == AS:
+                        import_alias = toks[idx+3]
+
+                    # print(source._vars_dict["GLOBALS"]["global_vars"])
+                    # print()
+
+                    for k, v in source._vars_dict["GLOBALS"]["global_vars"].copy().items():
+                        new_k = import_alias + DOT + k
+                        source._vars_dict["GLOBALS"]["global_vars"][new_k] = v
+                        del source._vars_dict["GLOBALS"]["global_vars"][k]
+                    
+                    for k, v in source._vars_dict["FUNCS"].copy().items():
+                        if k.endswith("_" + import_name):
+                            new_k = import_alias + DOT + k.strip("_" + import_name)
+                            source._vars_dict["FUNCS"][new_k] = v
+                            del source._vars_dict["FUNCS"][k]
+                    
+                    # print(source._vars_dict["GLOBALS"]["global_vars"])
+                    # print()
+
+                    # print(source._vars_dict["FUNCS"])
+
+                    self._imports_dict[import_alias] = import_name
+                    self._vars_dict["GLOBALS"]["global_vars"].update(source._vars_dict["GLOBALS"]["global_vars"])
+                    self._vars_dict["FUNCS"].update(source._vars_dict["FUNCS"])
+
+                    with open("./C/conf", "a") as file:
+                        file.write(import_name+".c"+NEWLINE)
+
+
+                
+                elif t.find(DOT) != -1 and t not in self._vars_dict["GLOBALS"]["global_vars"] and\
+                    t not in self._vars_dict["FUNCS"]:
+
+                   print(f"{t} not Found!") 
+
+
+                elif t == FUNCTION or t == PUB_FUNC:
                     current_func = toks[idx+1]
                     self.__func(current_func, toks)
 
@@ -844,6 +1053,7 @@ class BT_Grammar(Tokenizer):
 
                     # LET
                     if t == LET:
+                        # print(toks[idx+1])
                         c_str += self.__let(vars_dict,
                                             toks[idx+1:], _global_call)
 
@@ -877,12 +1087,12 @@ class BT_Grammar(Tokenizer):
                     (t in vars_dict.keys() and toks[idx+1] in [ADD, SUB, MUL, DIV] and toks[idx+2] == EQUALS) or\
                     (t in self._vars_dict["GLOBALS"]["global_vars"].keys() and toks[idx+1] == EQUALS) or\
                         (t in self._vars_dict["GLOBALS"]["global_vars"].keys() and toks[idx+1] in [ADD, SUB, MUL, DIV] and toks[idx+2] == EQUALS):
-
                     c_str += self.__reassign_vals(vars_dict,
                                                   toks, _global_call)
                     break
 
                 elif t in self._vars_dict["FUNCS"].keys() and toks[idx+1] == LEFTBRACK:
+                    # print(t)
                     # get function name
                     c_str += t
                     # Get function variables dict on index[1] with "var": (val, type) pairs

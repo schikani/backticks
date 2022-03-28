@@ -1,0 +1,12 @@
+let id = 3;
+let file_name = `file3.bt`;
+
+< get_id(): int
+{
+    return id;
+}
+
+< get_info(): str
+{
+    return file_name;
+}

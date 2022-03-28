@@ -60,6 +60,8 @@ FLOAT       =    "float"
 STR         =    "str"
 CHARSTAR    =    "char *"
 
+IMPORT      =    "import"
+AS          =    "as"
 LET         =    "let"
 LOOP        =    "loop"
 BREAK       =    "break"

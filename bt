@@ -1,0 +1,35 @@
+#!/usr/bin/python3
+
+
+import sys
+import pprint
+# Add backticks to path
+# sys.path.append("../")
+from backticks import BT_to_C
+
+
+py_file_name = sys.argv[0]
+bt_file_path = sys.argv[1]
+
+
+# while bt_file_name.find("/"):
+args = sys.argv[2:]
+
+
+source = BT_to_C(bt_file_path)
+if len(args):
+    if args[0].lower() in ["true", "1", "y"]:
+        source.compile("gcc", True)
+else:
+    source.compile("gcc")
+source.run()
+# print("GLOBALS\n")
+# pprint.pprint(source._vars_dict["GLOBALS"]["global_vars"])
+# print("\n\n")
+# print("FUNCS\n")
+# pprint.pprint(source._vars_dict["FUNCS"])
+# print("\n\n")
+
+# pprint.pprint(source.tokens)
+# pprint.pprint(source._imports_dict)
+# print(source._imports_dict)
