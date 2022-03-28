@@ -1,11 +1,8 @@
 <img src="https://github.com/schikani/backticks/blob/main/LOGO.png" width="200" height="200">
 
 ### A Transpiler written in Python to convert source code from .bt to .h/.c
-<br>
 
-### Example file `test.bt` in `src` dir can be transpiled with `./bt ./src/test.bt` command
-
-<br>
+#### Example file `test.bt` in `src` dir can be transpiled with `./bt ./src/test.bt` command
 
 ### Backticks source
 ```typescript
