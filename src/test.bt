@@ -1,0 +1,15 @@
+let num1 = 45;
+let num2 = 67.53;
+
+printl(`num1+num2 = [num1+num2]`);
+
+let line = `*`;
+let char_count = 0;
+
+printl(`Before:\t[line]`);
+loop until char_count < 30 
+{
+    line += `*`;
+    char_count += 1;
+}
+printl(`After:\t[line]`);
