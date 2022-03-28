@@ -3,8 +3,11 @@
 ### A Transpiler written in Python to convert source code from .bt to .h/.c
 <br>
 
+### Example file `test.bt` in `src` dir can be transpiled with `./bt ./src/test.bt` command
 
-### Backticks
+<br>
+
+### Backticks source
 ```backticks
 let num1 = 45;
 let num2 = 67.53;
@@ -22,9 +25,9 @@ loop until char_count < 30
 }
 printl(`After:\t[line]`);
 ```
-### Transpiled in header and source files
 
-* Header file
+### ~ Generated C header and source files ~
+### Header file
 ```H
 #ifndef _TEST_H_
 #define _TEST_H_
@@ -45,7 +48,7 @@ extern _TEST_H_VARS test;
 #endif
 ```
 
-* Source file
+### Source file
 ```C
 #include "test.h"
 _TEST_H_VARS test;
