@@ -58,11 +58,10 @@ f"""
 
 typedef struct
 {{
-
 {global_vars}
 }} {header_f_n}VARS;
 
-{header_f_n}VARS {_struct_name};
+extern {header_f_n}VARS {_struct_name};
 
 {funcs}
 {file_main_func}
@@ -88,9 +87,12 @@ def make_source(src_file_name, func_defs, funcs_list, main_body, _return, main_f
 
     header_f_n = src_file_name[:src_file_name.find(".c")] + ".h"
 
+    global_struct_def = f'{("_" + src_file_name[:src_file_name.find(".c")] + "_h_").upper()}VARS {src_file_name[:src_file_name.find(".c")]};'
+
     source_c = \
 f"""
 #include "{header_f_n}"
+{global_struct_def}
 
 {f_defs}
 {funcs}

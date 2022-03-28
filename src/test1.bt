@@ -1,0 +1,25 @@
+
+let file_name = `test1`;
+let count = 10;
+
+< loop_example():
+{
+    printl(`    ~~ [file_name] loop_example ~~`);
+    loop
+    {
+        if count == 0 {break;}
+        printl(`\t[file_name].count = [count]`);
+        count -= 1;
+        usleep(100000);
+    }
+}
+
+< loop_until_example():
+{
+    printl(`    ~~ [file_name] loop_until_example ~~`);
+    loop until count <= 10
+    {
+        printl(`\t[file_name].count = [count]`);
+        count += 1;
+    }
+}

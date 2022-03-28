@@ -326,6 +326,7 @@ class BT_Grammar(Tokenizer):
                         str_found = True
 
                     if v.find(DOT) == -1:
+                        # print(v)
                         val += v
                     else:
                         # print(v)
@@ -418,7 +419,6 @@ class BT_Grammar(Tokenizer):
             # String or Number
             if toks[1] == ADD and toks[2] == EQUALS:
                 if _type == STR:
-                    # print("~"+t+"~")
                     str_to_ret += _concat_str(t, val)
                 else:
                     str_to_ret += t + ADD + EQUALS + val + SEMI + NEWLINE
@@ -728,6 +728,7 @@ class BT_Grammar(Tokenizer):
         return False
 
     def __func(self, current_func, toks):
+
         c_func_params = ""
 
         current_func += "_" + self.bin_name
@@ -758,7 +759,8 @@ class BT_Grammar(Tokenizer):
             elif return_type == STR:
                 ret_val = ""
 
-            self._vars_dict["FUNCS"][current_func][0] = (ret_val, return_type)
+            # toks[0] can be `@` or `<`
+            self._vars_dict["FUNCS"][current_func][0] = (ret_val, return_type, toks[0])
 
             if params and params[0] != ":":
                 # Extract param vars and types and skip if no params
@@ -1009,31 +1011,27 @@ class BT_Grammar(Tokenizer):
                     if toks[idx+2] == AS:
                         import_alias = toks[idx+3]
 
-                    # print(source._vars_dict["GLOBALS"]["global_vars"])
-                    # print()
 
-                    for k, v in source._vars_dict["GLOBALS"]["global_vars"].copy().items():
+                    new_glbl_dict = dict()
+                    for k, v in source._vars_dict["GLOBALS"]["global_vars"].items():
                         new_k = import_alias + DOT + k
-                        source._vars_dict["GLOBALS"]["global_vars"][new_k] = v
-                        del source._vars_dict["GLOBALS"]["global_vars"][k]
+                        new_glbl_dict[new_k] = v
                     
-                    for k, v in source._vars_dict["FUNCS"].copy().items():
-                        if k.endswith("_" + import_name):
-                            new_k = import_alias + DOT + k.strip("_" + import_name)
-                            source._vars_dict["FUNCS"][new_k] = v
-                            del source._vars_dict["FUNCS"][k]
+                    new_funcs_dict = dict()
+                    for k, v in source._vars_dict["FUNCS"].items():
+                        if k.endswith("_" + import_name) and source._vars_dict["FUNCS"][k][0][2] == PUB_FUNC:
+                            new_k = import_alias + DOT + k[:k.rfind("_" + import_name)]
+                            new_funcs_dict[new_k] = v
                     
-                    # print(source._vars_dict["GLOBALS"]["global_vars"])
-                    # print()
-
-                    # print(source._vars_dict["FUNCS"])
 
                     self._imports_dict[import_alias] = import_name
-                    self._vars_dict["GLOBALS"]["global_vars"].update(source._vars_dict["GLOBALS"]["global_vars"])
-                    self._vars_dict["FUNCS"].update(source._vars_dict["FUNCS"])
+                    self._vars_dict["GLOBALS"]["global_vars"].update(new_glbl_dict)
+                    self._vars_dict["FUNCS"].update(new_funcs_dict)
 
                     with open("./C/conf", "a") as file:
                         file.write(import_name+".c"+NEWLINE)
+                    
+                    break
 
 
                 
@@ -1041,6 +1039,7 @@ class BT_Grammar(Tokenizer):
                     t not in self._vars_dict["FUNCS"]:
 
                    print(f"{t} not Found!") 
+                   break
 
 
                 elif t == FUNCTION or t == PUB_FUNC:
@@ -1092,15 +1091,13 @@ class BT_Grammar(Tokenizer):
                     break
 
                 elif t in self._vars_dict["FUNCS"].keys() and toks[idx+1] == LEFTBRACK:
-                    # print(t)
-                    # get function name
-                    c_str += t
                     # Get function variables dict on index[1] with "var": (val, type) pairs
                     _vars_dict = self._vars_dict["FUNCS"][t][1]
                     _val, _type = self.__eval_assign_values(
-                        _vars_dict, toks[idx+1:toks.index(SEMI)+1], _global_call, SEMI)
+                        _vars_dict, toks[:toks.index(SEMI)+1], _global_call, SEMI)
                     c_str += _val + SEMI + NEWLINE
                     break
+                
 
                 elif t == SLEEP:
                     c_str += self.__sleep(vars_dict,
