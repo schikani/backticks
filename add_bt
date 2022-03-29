@@ -1,0 +1,11 @@
+#!/usr/bin/python3
+import os
+
+bin_folder_path = "$HOME/bin/"
+
+print("COPYING", end="")
+os.system(f"cp -r ./backticks {bin_folder_path}")
+print("..")
+os.system(f"cp ./bt {bin_folder_path}")
+print("COPIED!")
+
