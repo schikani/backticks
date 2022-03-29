@@ -22,6 +22,12 @@ loop until char_count < 30
 }
 printl(`After:\t[line]`);
 ```
+Output
+```
+num1+num2 = 112.530000
+Before:	*
+After:	*******************************
+```
 
 ### ~ Generated C header and source files ~
 ### Header file
