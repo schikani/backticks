@@ -26,6 +26,7 @@ class BT_to_C(BT_Grammar):
     def compile(self, compiler_path, del_c_h_files=False):
         src_files = set()
 
+        # Append current file in conf
         with open("./C/conf", "a") as file:
             file.write(self.bin_name +".c" + SPACE)
 
@@ -41,10 +42,11 @@ class BT_to_C(BT_Grammar):
 
         os.system(f"{compiler_path} {c_sources} -o ./bin/{self.bin_name} -lm")
 
+        os.remove("./C/conf")
+
         if del_c_h_files:
             os.system("rm -rf ./C")
 
-        os.remove("./C/conf")
 
     def run(self):
         os.system(f"./bin/{self.bin_name}")

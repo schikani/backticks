@@ -94,4 +94,5 @@ PRINT       =    "print"
 PRINTL      =    "printl"
 SLEEP       =    "sleep"
 USLEEP      =    "usleep"
+INPUT       =    "input"
 

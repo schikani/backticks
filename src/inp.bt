@@ -1,0 +1,13 @@
+# let a = input(`1`);
+
+@ func(name: str): str
+{
+    return name;
+}
+
+printl(`[func(\`inp.bt\`)]`);
+
+if func(`inp.bt`) == func(`inp.bt`)
+{
+    printl(`1234567890`);
+}
