@@ -1,59 +1,7 @@
 from ._tokens import *
 from .tokenizer import Tokenizer
 from .c_templates import *
-
-def _new_str(var, _str):
-
-    _s = ""
-    for i in _str:
-        if i == NEWLINE:
-            _s += "\\n"
-        else:
-            _s += i
-
-    _str = _s
-
-    str_to_ret = f'{var} = calloc(strlen({_str})+1, sizeof(char));' + NEWLINE
-    str_to_ret += f'strcpy({var}, {_str});' + NEWLINE
-    return str_to_ret
-
-
-def _concat_str(var, _str):
-
-    _s = ""
-    for i in _str:
-        if i == NEWLINE:
-            _s += "\\n"
-        else:
-            _s += i
-
-    _str = _s
-
-    str_to_ret = f'{var} = realloc({var}, (strlen({var}) + strlen({_str})) * sizeof(char));' + NEWLINE
-    str_to_ret += f'strcat({var}, {_str});' + NEWLINE
-    return str_to_ret
-
-
-def _compare_str(var, _str):
-
-    _s = ""
-    for i in _str:
-        if i == NEWLINE:
-            _s += "\\n"
-        else:
-            _s += i
-
-    _str = _s
-
-    str_to_ret = f'strcmp({var}, {_str})'
-    return str_to_ret
-
-
-def _free_str(var):
-    str_to_ret = f'free({var});' + NEWLINE
-    str_to_ret += f'{var} = NULL;' + NEWLINE
-    return str_to_ret
-
+from .utils.strings import *
 
 class BT_Grammar(Tokenizer):
     def __init__(self, bt_file_path):
@@ -215,7 +163,7 @@ class BT_Grammar(Tokenizer):
                         str2 += LEFTBRACK + RIGHTBRACK
                         _val_idx += 2
 
-                    val += _compare_str(str1, str2) + EQUALS + EQUALS + ZERO
+                    val += compare_str(str1, str2) + EQUALS + EQUALS + ZERO
 
                     _val_idx += 4
                     continue
@@ -419,7 +367,7 @@ class BT_Grammar(Tokenizer):
             # String or Number
             if toks[1] == ADD and toks[2] == EQUALS:
                 if _type == STR:
-                    str_to_ret += _concat_str(t, val)
+                    str_to_ret += concat_str(t, val)
                 else:
                     str_to_ret += t + ADD + EQUALS + val + SEMI + NEWLINE
 
@@ -430,8 +378,8 @@ class BT_Grammar(Tokenizer):
             # Case '='
             else:
                 if _type == STR:
-                    str_to_ret += _free_str(t)
-                    str_to_ret += _new_str(t, val)
+                    str_to_ret += free_str(t)
+                    str_to_ret += new_str(t, val)
                 else:
                     # print(t)
                     str_to_ret += t + EQUALS + val + SEMI + NEWLINE
@@ -453,7 +401,7 @@ class BT_Grammar(Tokenizer):
             # String or Number
             if toks[1] == ADD and toks[2] == EQUALS:
                 if _type == STR:
-                    str_to_ret += _concat_str(t, val)
+                    str_to_ret += concat_str(t, val)
                 else:
                     str_to_ret += t + ADD + EQUALS + val + SEMI + NEWLINE
 
@@ -464,8 +412,8 @@ class BT_Grammar(Tokenizer):
             # Case '='
             else:
                 if _type == STR:
-                    str_to_ret += _free_str(t)
-                    str_to_ret += _new_str(t, val)
+                    str_to_ret += free_str(t)
+                    str_to_ret += new_str(t, val)
                 else:
                     # print(t)
                         # str_to_ret += self.bin_name + DOT + t + EQUALS + val + SEMI + NEWLINE
@@ -531,12 +479,12 @@ class BT_Grammar(Tokenizer):
             if _global_call:
                 self._global_vars_list.append(f"{_type} {var}")
                 if _type == CHARSTAR:
-                    return _new_str(self.bin_name+DOT+var, val)
+                    return new_str(self.bin_name+DOT+var, val)
                 return f"{self.bin_name}.{var} = {val};\n"
 
             else:
                 if _type == CHARSTAR:
-                    return CHARSTAR + _new_str(var, val)
+                    return CHARSTAR + new_str(var, val)
                 return f"{_type} {var} = {val};\n"
 
     def __print(self, vars_dict, tok_list, _global_call):
