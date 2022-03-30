@@ -2,3 +2,7 @@ C
 bin
 backticks/__pycache__/
 backticks/utils/__pycache__/
+beta
+esp_test
+.DS_Store
+.vscode
