@@ -12,7 +12,8 @@ def make_bt_inbuilts_header():
 #include <math.h>
 #include <unistd.h>
 
-// # pragma GCC diagnostic ignored "-Wformat"
+#pragma GCC diagnostic ignored "-Wformat" 
+#pragma GCC diagnostic ignored "-Wunknown-escape-sequence"
 
 char *_bt_input(FILE *in);
 

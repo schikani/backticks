@@ -28,14 +28,14 @@ class BT_Grammar(Tokenizer):
                       FUNCTION VARIABLES
             {
                "func1": [
-                   (ret_val, ret_type), 
+                   (ret_val, ret_type, func_type), 
                 {
                     "var1": [val, type],
                     "var2": [val, type],
                 }],
 
                 "func2": [
-                        (ret_val, ret_type),    --> index 0 of 'func2'
+                        (ret_val, ret_type, func_type),    --> index 0 of 'func2'
                 {
                         "var1": [val, type], 
                         "var2": [val, type],
@@ -82,7 +82,7 @@ class BT_Grammar(Tokenizer):
             if self._in_func_names(v):
                 v = self._in_func_names(v)
 
-            if self.is_operator(v) or self.is_string(v) or self.is_string(v, vars_dict) or\
+            if self.is_string(v) or self.is_string(v, vars_dict) or\
                 self.is_string(v, self._vars_dict["GLOBALS"]["global_vars"]) or\
                 self.is_string(v, self._vars_dict["FUNCS"], func=True) or\
                 v == INPUT and tok_list[_val_idx+1] == LEFTBRACK:
@@ -146,7 +146,7 @@ class BT_Grammar(Tokenizer):
                                 new_s1_t.append(v)
                                 if idx < len(s1_t)-1:
                                     new_s1_t.append(COMA)
-                            print(new_s1_t)
+                            # print(new_s1_t)
                             new_s1_t.append(SEMI)
                             _val, _type = self.__eval_assign_values(vars_dict, new_s1_t, _global_call, SEMI)
                             str1_params = _val
@@ -158,7 +158,7 @@ class BT_Grammar(Tokenizer):
                                 new_s2_t.append(v)
                                 if idx < len(s2_t)-1:
                                     new_s2_t.append(COMA)
-                            print(new_s2_t)
+                            # print(new_s2_t)
                             new_s2_t.append(SEMI)
                             _val, _type = self.__eval_assign_values(vars_dict, new_s2_t, _global_call, SEMI)
                             str2_params = _val
@@ -564,23 +564,54 @@ class BT_Grammar(Tokenizer):
                     return CHARSTAR + new_str(var, val)
                 return f"{_type} {var} = {val};\n"
 
-    def __print(self, vars_dict, tok_list, _global_call):
-
+    def __print(self, vars_dict, tok_list, _global_call, newline):
+        
         print_str = tok_list[0]
+        # if not tok_list.count(COMA):
 
         if (self.is_string(print_str)):
             print_str = print_str[1:-1]
+        
+        elif self.is_string(print_str, self._vars_dict["GLOBALS"]["global_vars"]):
+            print_str = self._vars_dict["GLOBALS"]["global_vars"][print_str][0][1:-1]
+        
+        # elif print_str + "_" + self.bin_name in self._vars_dict["FUNCS"]:
+        elif self._in_func_names(print_str):
+            print_str = self._in_func_names(print_str)
+            end = 1
+            # print_str += LEFTBRACK
 
-            return self.__string_parser(print_str, vars_dict, _global_call, new_line=False)
+            for st in tok_list[1:]:
+                print_str += st
 
-    def __printl(self, vars_dict, tok_list, _global_call):
+            print_str = print_str[:-2]
 
-        print_str = tok_list[0]
+            # print(tok_list)
+            # print_str = self._vars_dict["FUNCS"][print_str][0][0]
+            # print(self._vars_dict["FUNCS"][print_str].items())
+        
+        # else:
+        #     # @TODO
+        #     pass
+            # print_str = ""
+            # for idx, st in enumerate(tok_list):
 
-        if (self.is_string(print_str)):
-            print_str = print_str[1:-1]
+            #     if not st == COMA:
+            #         print_str += st
+                
+            #     elif st == COMA:
+            #         print_str += COMA
 
+            #         # if idx < len(tok_list) - 1:
+            #         #     print_str += COMA + SPACE
+            # print_str = [print_str[:-2]+SEMI, ()] 
+            # val, _type = self.__eval_assign_values(vars_dict, print_str, _global_call, SEMI)
+            # print_str = val
+            # # print(print_str)
+
+        if newline:
             return self.__string_parser(print_str, vars_dict, _global_call, new_line=True)
+        return self.__string_parser(print_str, vars_dict, _global_call, new_line=False)
 
     # Loops
     def __loop_until_for(self, vars_dict, tok_list, _global_call):
@@ -759,6 +790,7 @@ class BT_Grammar(Tokenizer):
         current_func += "_" + self.bin_name
 
         if not current_func in self._vars_dict["FUNCS"]:
+            func_type = toks[0]
             self._vars_dict["FUNCS"].update({current_func: [(), {}]})
             prms_and_ret = toks[toks.index(LEFTBRACK): toks.index(LEFTCURL)]
             params = prms_and_ret[prms_and_ret.index(
@@ -784,8 +816,8 @@ class BT_Grammar(Tokenizer):
             elif return_type == STR:
                 ret_val = ""
 
-            # toks[0] can be `@` or `<`
-            self._vars_dict["FUNCS"][current_func][0] = (ret_val, return_type, toks[0])
+            # func_type can be `@` or `<`
+            self._vars_dict["FUNCS"][current_func][0] = [ret_val, return_type, func_type]
 
             if params and params[0] != ":":
                 # Extract param vars and types and skip if no params
@@ -806,8 +838,10 @@ class BT_Grammar(Tokenizer):
                         val = ""
 
                     self._vars_dict["FUNCS"][current_func][1][var] = (val, _type)
+
                     if _type == STR:
                         _type = CHARSTAR
+
                     c_func_params += f"{_type} {var}"
 
                     # To exclude comma after last param
@@ -856,10 +890,10 @@ class BT_Grammar(Tokenizer):
 
             self._funcs_impl.append(func)
 
-            if toks[0] == FUNCTION:
+            if func_type == FUNCTION:
                 self._private_func_list.append(
                     f"{return_type} {current_func}({c_func_params});")
-            elif toks[0] == PUB_FUNC:
+            elif func_type == PUB_FUNC:
                 self._public_func_list.append(
                     f"{return_type} {current_func}({c_func_params});")
 
@@ -892,7 +926,7 @@ class BT_Grammar(Tokenizer):
             c = string[right]
 
             if not box_started:
-                if c == LEFTSQUARE:
+                if c == LEFTSQUARE and string[right-1] != BACKSLASH:
                     left = right + 1
                     box_started = True
 
@@ -905,7 +939,7 @@ class BT_Grammar(Tokenizer):
                     frmt += c
 
             else:
-                if (c == RIGHTSQUARE):
+                if c == RIGHTSQUARE and string[right-1] != BACKSLASH:
                     var = self.sub_string(string, left, right)
                     var_list = [var, ()]
                     val, _type = self.__eval_assign_values(
@@ -926,75 +960,6 @@ class BT_Grammar(Tokenizer):
                         frmt += "%s"
 
                     values += COMA + val
-
-                    # if var.find(ADD) != -1:
-                    #     nums = var.split(ADD)
-                    #     float_found = False
-                    #     _v = ""
-                    #     for idx, n in enumerate(nums):
-                    #         if self.is_float(n):
-                    #             float_found = True
-
-                    #         if idx < len(nums) - 1:
-                    #             _v += n + ADD
-
-                    #         else:
-                    #             _v += n
-
-                    #     if float_found:
-                    #         frmt += "%f"
-                    #     else:
-                    #         frmt += "%d"
-
-                    #     values += COMA + _v
-
-                    # # To store
-                    # elif var in vars_dict.keys():
-                    #     # Type
-                    #     if vars_dict[var][1] == LONG:
-                    #         frmt += "%ld"
-                    #     elif vars_dict[var][1] == DOUBLE:
-                    #         frmt += "%f"
-
-                    #     elif vars_dict[var][1] == STR:
-                    #         frmt += "%s"
-
-                    #     # If global variable
-                    #     if _global_call:
-                    #         values += f", {self.bin_name}.{var}"
-
-                    #     else:
-                    #         values += f", {var}"
-
-                    # # If var not found check in global vars
-                    # elif var in self._vars_dict["GLOBALS"]["global_vars"].keys():
-                    #     # Type
-                    #     if self._vars_dict["GLOBALS"]["global_vars"][var][1] == LONG:
-                    #         frmt += "%ld"
-
-                    #     elif self._vars_dict["GLOBALS"]["global_vars"][var][1] == DOUBLE:
-                    #         frmt += "%f"
-
-                    #     elif self._vars_dict["GLOBALS"]["global_vars"][var][1] == STR:
-                    #         frmt += "%s"
-
-                    #     values += f", {self.bin_name}.{var}"
-
-                    # # If it is a function
-                    # elif var[-2] == LEFTBRACK and var[-1] == RIGHTBRACK:
-                    #     var = var[:-2]
-                    #     if var in self._vars_dict["FUNCS"].keys():
-                    #         # Type
-                    #         if self._vars_dict["FUNCS"][var][0][1] == LONG:
-                    #             frmt += "%ld"
-
-                    #         elif self._vars_dict["FUNCS"][var][0][1] == DOUBLE:
-                    #             frmt += "%f"
-
-                    #         elif self._vars_dict["FUNCS"][var][0][1] == STR:
-                    #             frmt += "%s"
-
-                    #         values += f", {var}()"
 
                     box_started = False
 
@@ -1137,12 +1102,12 @@ class BT_Grammar(Tokenizer):
 
                 elif t == PRINT:
                     c_str += self.__print(vars_dict,
-                                          toks[idx+2:], _global_call)
+                                          toks[idx+2:], _global_call, False)
                     break
 
                 elif t == PRINTL:
-                    c_str += self.__printl(vars_dict,
-                                           toks[idx+2:], _global_call)
+                    c_str += self.__print(vars_dict,
+                                           toks[idx+2:], _global_call, True)
                     break
 
         return c_str
