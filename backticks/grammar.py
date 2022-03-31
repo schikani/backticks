@@ -1,3 +1,4 @@
+from operator import le
 from ._tokens import *
 from .tokenizer import Tokenizer
 from .c_templates import *
@@ -89,20 +90,83 @@ class BT_Grammar(Tokenizer):
                     # print("~"+v+"~")
 
                     str1 = ""
+                    str1_params = ""
                     str2 = ""
+                    str2_params = ""
 
-                    if (tok_list[_val_idx+1] == EQUALS and tok_list[_val_idx+2] == EQUALS) or\
-                        (tok_list[_val_idx+1] == LEFTBRACK and tok_list[_val_idx+2] == RIGHTBRACK and
-                        tok_list[_val_idx+3] == EQUALS and tok_list[_val_idx+4] == EQUALS):
+                    # Compare
+                    if tok_list.count(EQUALS) == 2:
                         str1 = v
-                        if tok_list[_val_idx+1] == LEFTBRACK and tok_list[_val_idx+2] == RIGHTBRACK:
-                            str2 = tok_list[_val_idx+5]
+                        if tok_list.count(LEFTBRACK):
+                            if tok_list[_val_idx+1] == LEFTBRACK:
+                                _val_idx += 2
+                                while tok_list[_val_idx] != RIGHTBRACK:
+                                    str1_params += tok_list[_val_idx]
+                                    _val_idx += 1
+                                
+                                _val_idx += 3
+
+                                str2 = tok_list[_val_idx]
+
+                                if tok_list[_val_idx+1] == LEFTBRACK:
+                                    _val_idx += 2
+                                    while tok_list[_val_idx] != RIGHTBRACK:
+                                        str2_params += tok_list[_val_idx]
+                                        _val_idx += 1
+                                        
+                                    _val_idx += 1
+
+
+                                if self._in_func_names(str2):
+                                    str2 = self._in_func_names(str2)
+
+                            else:
+                                _val_idx += 3
+                                str2 = tok_list[_val_idx]
+
+                                if tok_list[_val_idx+1] == LEFTBRACK:
+                                    _val_idx += 2
+                                    while tok_list[_val_idx] != RIGHTBRACK:
+                                        str2_params += tok_list[_val_idx]
+                                        _val_idx += 1
+                                        
+                                    _val_idx += 1
+                                
+                                if self._in_func_names(str2):
+                                    str2 = self._in_func_names(str2)
+
                         else:
-                            str2 = tok_list[_val_idx+3]
+                            _val_idx += 3
+                            str2 = tok_list[_val_idx]
+
+                        if str1_params:
+                            s1_t = str1_params.split(COMA)
+                            new_s1_t = []
+                            for idx, v in enumerate(s1_t):
+                                new_s1_t.append(v)
+                                if idx < len(s1_t)-1:
+                                    new_s1_t.append(COMA)
+                            print(new_s1_t)
+                            new_s1_t.append(SEMI)
+                            _val, _type = self.__eval_assign_values(vars_dict, new_s1_t, _global_call, SEMI)
+                            str1_params = _val
+                        
+                        if str2_params:
+                            s2_t = str2_params.split(COMA)
+                            new_s2_t = []
+                            for idx, v in enumerate(s2_t):
+                                new_s2_t.append(v)
+                                if idx < len(s2_t)-1:
+                                    new_s2_t.append(COMA)
+                            print(new_s2_t)
+                            new_s2_t.append(SEMI)
+                            _val, _type = self.__eval_assign_values(vars_dict, new_s2_t, _global_call, SEMI)
+                            str2_params = _val
+
+
+                        # print(str1, str2)
 
                         if self.is_string(str1):
-                            # print("~"+str1+"~")
-
                             str1 = self.__bt_to_c_str(str1)
 
                         elif self.is_string(str1, vars_dict):
@@ -129,8 +193,8 @@ class BT_Grammar(Tokenizer):
                                 if sl[0] in self._imports_dict:
                                     str1 = sl[1] + "_" + self._imports_dict[sl[0]]
                         
-                            str1 += LEFTBRACK + RIGHTBRACK
-                            _val_idx += 2
+                            str1 += LEFTBRACK + str1_params + RIGHTBRACK
+                            # _val_idx += 2
                             
 
                         if self.is_string(str2):
@@ -164,13 +228,14 @@ class BT_Grammar(Tokenizer):
                                 if sl[0] in self._imports_dict:
                                     str2 = sl[1] + "_" + self._imports_dict[sl[0]]
                         
-                            str2 += LEFTBRACK + RIGHTBRACK
-                            _val_idx += 2
+                            str2 += LEFTBRACK + str2_params + RIGHTBRACK
+                            # _val_idx += 2
 
                         val += compare_str(str1, str2) + EQUALS + EQUALS + ZERO
 
-                        _val_idx += 4
-                        continue
+                        # _val_idx += 4
+                        # continue
+                        break
                         
                     elif v == INPUT and tok_list[_val_idx+1] == LEFTBRACK and self.is_string(tok_list[_val_idx+2]):
                         print("~"+v+"~")
