@@ -988,7 +988,11 @@ class BT_Grammar(Tokenizer):
                     from .bt_to_c import BT_to_C
 
                     import_name = toks[idx+1]
-                    imp_file_path = self.bt_file_path[:self.bt_file_path.rindex("/")+1] + import_name + ".bt"
+                    try:
+                        imp_file_path = self.bt_file_path[:self.bt_file_path.rindex("/")+1] + import_name + ".bt"
+                    except ValueError:
+                        imp_file_path = "./" + import_name + ".bt"
+
                     source = BT_to_C(imp_file_path, main_file=False)
 
                     self._includes.append(f'#include "{import_name}.h"')
