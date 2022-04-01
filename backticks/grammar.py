@@ -567,51 +567,47 @@ class BT_Grammar(Tokenizer):
     def __print(self, vars_dict, tok_list, _global_call, newline):
         
         print_str = tok_list[0]
-        # if not tok_list.count(COMA):
+
+        str_to_ret = ""
+        
 
         if (self.is_string(print_str)):
             print_str = print_str[1:-1]
         
+        
+        elif self.is_string(print_str, vars_dict):
+            # print(54654, print_str)
+            print_str = vars_dict[print_str][0]
+            if print_str[0] == D_QUOTE and print_str[-1] == D_QUOTE:
+                print_str = print_str[1:-1]
+            else:
+                # Maybe a function
+                print_str = LEFTSQUARE + print_str + RIGHTSQUARE
+            
+            # print(print_str)
+        
         elif self.is_string(print_str, self._vars_dict["GLOBALS"]["global_vars"]):
             print_str = self._vars_dict["GLOBALS"]["global_vars"][print_str][0][1:-1]
-        
-        # elif print_str + "_" + self.bin_name in self._vars_dict["FUNCS"]:
+            # print(print_str)
+
         elif self._in_func_names(print_str):
             print_str = self._in_func_names(print_str)
-            end = 1
-            # print_str += LEFTBRACK
-
             for st in tok_list[1:]:
                 print_str += st
 
             print_str = print_str[:-2]
+            print_str = LEFTSQUARE + print_str + RIGHTSQUARE
 
-            # print(tok_list)
-            # print_str = self._vars_dict["FUNCS"][print_str][0][0]
-            # print(self._vars_dict["FUNCS"][print_str].items())
-        
-        # else:
-        #     # @TODO
-        #     pass
-            # print_str = ""
-            # for idx, st in enumerate(tok_list):
 
-            #     if not st == COMA:
-            #         print_str += st
-                
-            #     elif st == COMA:
-            #         print_str += COMA
-
-            #         # if idx < len(tok_list) - 1:
-            #         #     print_str += COMA + SPACE
-            # print_str = [print_str[:-2]+SEMI, ()] 
-            # val, _type = self.__eval_assign_values(vars_dict, print_str, _global_call, SEMI)
-            # print_str = val
-            # # print(print_str)
+        else:
+            print_str = LEFTSQUARE + print_str + RIGHTSQUARE
 
         if newline:
-            return self.__string_parser(print_str, vars_dict, _global_call, new_line=True)
-        return self.__string_parser(print_str, vars_dict, _global_call, new_line=False)
+            str_to_ret += self.__string_parser(print_str, vars_dict, _global_call, new_line=True)
+        else:
+            str_to_ret += self.__string_parser(print_str, vars_dict, _global_call, new_line=False)
+        
+        return str_to_ret
 
     # Loops
     def __loop_until_for(self, vars_dict, tok_list, _global_call):
