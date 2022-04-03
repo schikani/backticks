@@ -1,8 +1,8 @@
-from operator import le
 from ._tokens import *
 from .tokenizer import Tokenizer
 from .c_templates import *
 from .utils.strings import *
+from .utils.lists import *
 
 class BT_Grammar(Tokenizer):
     def __init__(self, bt_file_path):
@@ -610,7 +610,9 @@ class BT_Grammar(Tokenizer):
                 # Maybe a function
                 print_str = LEFTSQUARE + print_str + RIGHTSQUARE
             
-            # print(print_str)
+            # When empty string is found, evaluate the variable inside []
+            if not print_str:
+                print_str = LEFTSQUARE + tok_list[0] + RIGHTSQUARE
         
         elif self.is_string(print_str, self._vars_dict["GLOBALS"]["global_vars"]):
             print_str = self._vars_dict["GLOBALS"]["global_vars"][print_str][0][1:-1]
