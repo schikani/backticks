@@ -54,6 +54,7 @@ class BT_Grammar(Tokenizer):
         return _str
 
     def __eval_assign_values(self, vars_dict, tok_list, _global_call, _del):
+        bool_found = False
         float_found = False
         str_found = False
         int_found = False
@@ -297,6 +298,11 @@ class BT_Grammar(Tokenizer):
             elif v in [LEFTBRACK, RIGHTBRACK, LEFTCURL, RIGHTCURL]:
                 val += v
 
+            elif v in ["True", "False"]:
+                # print("*" * 67)
+                val += v.lower()
+                _type = BOOL
+
             elif v in [AND, OR]:
                 if v == AND:
                     val += " && "
@@ -310,8 +316,11 @@ class BT_Grammar(Tokenizer):
                 # Check for function variable name
                 # If it is in global scope or function scope
                 if v in vars_dict.keys():
+                    
+                    if vars_dict[v][1] == BOOL:
+                        bool_found = True
 
-                    if vars_dict[v][1] == DOUBLE:
+                    elif vars_dict[v][1] == DOUBLE:
                         float_found = True
 
                     elif vars_dict[v][1] == LONG:
@@ -319,6 +328,8 @@ class BT_Grammar(Tokenizer):
 
                     elif vars_dict[v][1] == STR:
                         str_found = True
+                    
+                    # elif vars_dict[v][1] == CONST
 
                     if _global_call:
                         if not str_found:
@@ -338,8 +349,10 @@ class BT_Grammar(Tokenizer):
                 elif v in self._vars_dict["FUNCS"].keys():
                     # print(v)
 
+                    if self._vars_dict["FUNCS"][v][0][1] == BOOL:
+                        bool_found = True
 
-                    if self._vars_dict["FUNCS"][v][0][1] == DOUBLE:
+                    elif self._vars_dict["FUNCS"][v][0][1] == DOUBLE:
                         float_found = True
 
                     elif self._vars_dict["FUNCS"][v][0][1] == LONG:
@@ -361,7 +374,10 @@ class BT_Grammar(Tokenizer):
             elif v in self._vars_dict["GLOBALS"]["global_vars"].keys():
                 # print(v)
 
-                if self._vars_dict["GLOBALS"]["global_vars"][v][1] == DOUBLE:
+                if self._vars_dict["GLOBALS"]["global_vars"][v][1] == BOOL:
+                    bool_found = True
+
+                elif self._vars_dict["GLOBALS"]["global_vars"][v][1] == DOUBLE:
                     float_found = True
 
                 elif self._vars_dict["GLOBALS"]["global_vars"][v][1] == LONG:
@@ -380,6 +396,10 @@ class BT_Grammar(Tokenizer):
 
                     # val += self.bin_name + DOT + v
 
+            elif self.is_bool(v):
+                val += v
+                bool_found = True
+
             elif self.is_float(v):
                 val += v
                 float_found = True
@@ -391,6 +411,9 @@ class BT_Grammar(Tokenizer):
 
         if str_found:
             _type = STR
+        
+        elif bool_found:
+            _type = BOOL
 
         elif float_found:
             _type = DOUBLE
@@ -535,7 +558,10 @@ class BT_Grammar(Tokenizer):
             elif assign == COLON:
                 _type = tok_list[2]
 
-                if _type == INT:
+                if _type == BOOL:
+                    val = "false"
+
+                elif _type == INT:
                     _type = LONG
                     val = "0"
 
@@ -946,9 +972,12 @@ class BT_Grammar(Tokenizer):
                     # Type
                     if _type == LONG:
                         if val.find(SUB) != -1:
-                            frmt += "%d"
+                            frmt += "%d"                         
                         else:
                             frmt += "%ld"
+
+                    elif _type == BOOL:
+                        frmt += "%d"
 
                     elif _type == DOUBLE:
                         frmt += "%f"

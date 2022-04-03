@@ -1,0 +1,11 @@
+let a: bool; # Initialized to False
+a = True;
+
+let b = False;  
+
+if a
+{
+    printl(`a = True`);
+}
+
+printl(`b = [b]`);

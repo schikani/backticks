@@ -54,11 +54,12 @@ LONG        =    "long"
 DOUBLE      =    "double"
 
 INT         =    "int"
-UINT        =    "uint"
+# UINT        =    "uint"
 BOOL        =    "bool"
 FLOAT       =    "float"
 STR         =    "str"
 CHARSTAR    =    "char *"
+CONST       =    "const"
 
 IMPORT      =    "import"
 AS          =    "as"

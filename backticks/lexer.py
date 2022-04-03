@@ -47,16 +47,20 @@ class Lexer:
             return True
 
     def is_keyword(self, string):
-        if string == LET or string == LOOP or\
+        if string == CONST or string == LET or string == LOOP or\
 	    string ==  BREAK or string ==  CONTINUE or\
 	    string ==  IF or string ==  ELIF or\
 	    string ==  ELSE or string ==  RETURN or\
-	    string ==  INT or string ==  UINT or\
-	    string ==  BOOL or string ==  FLOAT or\
-	    string ==  STR:
+	    string ==  INT or string ==  BOOL or\
+        string ==  FLOAT or string ==  STR:
             return True
         else:
 	        return False
+    
+    def is_bool(self, string):
+        if string[0] in ["True", "False"]:
+            return True
+        return False
     
     def is_int(self, string):
         if string[0] != TICK:
