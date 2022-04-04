@@ -78,6 +78,11 @@ class Tokenizer(Lexer):
 
                 left = right
             
+            # Lists
+            elif buf[right] == LEFTSQUARE:
+                while right < length and not buf[right].endswith(RIGHTSQUARE):
+                    right += 1
+            
                 
             else:
 

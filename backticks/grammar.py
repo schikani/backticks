@@ -334,6 +334,7 @@ class BT_Grammar(Tokenizer):
                     if _global_call:
                         if not str_found:
                             if v.find(DOT) == -1:
+                                # print(v)
                                 val += self.bin_name + DOT + v
                             else:
                                 vl = v.split(DOT)
@@ -484,6 +485,8 @@ class BT_Grammar(Tokenizer):
 
         elif _global_call or t in self._vars_dict["GLOBALS"]["global_vars"] or t in self._vars_dict["FUNCS"]:
             
+            # print(val, _type)
+
             if t.find(DOT) == -1:                
                 t = self.bin_name + DOT + t
 
@@ -530,6 +533,12 @@ class BT_Grammar(Tokenizer):
         var = tok_list[0]
         val = ""
         _type = ""
+        _li_conts = ""
+        _list = False
+
+        if var.endswith("[]"):
+            var = var[:var.find(LEFTSQUARE)]
+            _list = True
 
         # Check if the variable is already defined
         if var not in vars_dict.keys():
@@ -539,21 +548,53 @@ class BT_Grammar(Tokenizer):
             assign = tok_list[1]
 
             if assign == EQUALS:
-
-                if self._in_func_names(tok_list[2]):
-                    tok_list[2] = self._in_func_names(tok_list[2])
                 
-                # elif 
+                # _li_conts = ""
 
-                # print(tok_list)
+                if not _list and tok_list[2].endswith(RIGHTSQUARE):
+                    _l_idx = len(tok_list[2]) - 1
+                    while tok_list[2][_l_idx] != LEFTSQUARE:
+                        if tok_list[2][_l_idx] != RIGHTSQUARE:
+                            _li_conts += tok_list[2][_l_idx]
+                        _l_idx -= 1
+
+                    tok_list[2] = tok_list[2][:_l_idx]
+
+                if len(tok_list) > 1 and tok_list[2][0] == LEFTSQUARE and tok_list[2][-1] == RIGHTSQUARE:
+                    _t = tok_list[2][1:-1].split(COMA)
+                    _t = [self.__bt_to_c_str(i) for i in _t if self.is_string(i)]
+                    # _t = ""
+                    # for idx, i in enumerate(tok_list[2]):
+                        # if i.startswith(LEFTSQUARE):
+                        #     _t += LEFTCURL + i[i.find(LEFTSQUARE)+1:]
+                        #     # if self.is_string(i[i.find(LEFTSQUARE)+1:]):
+                        #     #     _t += LEFTCURL + self.__bt_to_c_str(i[i.find(LEFTSQUARE)+1:])
+                        # elif i.endswith(RIGHTSQUARE):
+                        #     _t += i[:i.find(RIGHTSQUARE)] + RIGHTCURL
+                        #     # if self.is_string(i[:i.find(RIGHTSQUARE)]):
+                        #     #     _t += self.__bt_to_c_str(i[:i.find(RIGHTSQUARE)])  + RIGHTCURL
+                        # else:
+                        # _t += i
+                    print(_t)
+                            
+                    
+                    # print(_t)
+
+                
+
+                elif self._in_func_names(tok_list[2]):
+                    tok_list[2] = self._in_func_names(tok_list[2])
+
 
                 val, _type = self.__eval_assign_values(
                     vars_dict, tok_list[2:], _global_call, SEMI)
 
+                # print(var)
                 # print(val, _type)
 
-                vars_dict[var].append(val)
+                vars_dict[var].append(val+_li_conts)
                 vars_dict[var].append(_type)
+                vars_dict[var].append(_list)
 
             elif assign == COLON:
                 _type = tok_list[2]
@@ -573,22 +614,52 @@ class BT_Grammar(Tokenizer):
                     _type = STR
                     val = '""'
 
+                # print(var)
+                # print(val, _type)
+
+
                 vars_dict[var].append(val)
                 vars_dict[var].append(_type)
+                vars_dict[var].append(_list)
+
+
 
             if _type == STR:
                 _type = CHARSTAR
 
+
             if _global_call:
-                self._global_vars_list.append(f"{_type} {var}")
-                if _type == CHARSTAR:
+                if not _list:
+                    self._global_vars_list.append(f"{_type} {var}")
+                else:
+                    self._global_vars_list.append(f"{_type} *{var}")
+
+                if _type == CHARSTAR and not _list:
                     return new_str(self.bin_name+DOT+var, val)
-                return f"{self.bin_name}.{var} = {val};\n"
+                elif _list:
+                    self._global_vars_list.append(f"{_type} *{var}_copy")
+                    self._global_vars_list.append(f"size_t {var}_len")
+                    return new_list(_type, self.bin_name+DOT+var,\
+                         val.replace(LEFTSQUARE, "").\
+                            replace(RIGHTSQUARE, "").split(COMA))
+                else:
+                    if not _li_conts:
+                        return f"{self.bin_name}.{var} = {val};\n"
+                    else:
+                        return f"{self.bin_name}.{var} = {val}[{_li_conts}];\n"
 
             else:
-                if _type == CHARSTAR:
+                if _type == CHARSTAR and not _list:
                     return CHARSTAR + new_str(var, val)
-                return f"{_type} {var} = {val};\n"
+                elif _list:
+                    return new_list(_type, self.bin_name+DOT+var,\
+                         val.replace(LEFTSQUARE, "").\
+                            replace(RIGHTSQUARE, "").split(COMA))
+                if not _li_conts:
+                    return f"{_type} {var} = {val};\n"
+                else:
+                    return f"{_type} {var} = {val}[{_li_conts}];\n"
+
 
     def __print(self, vars_dict, tok_list, _global_call, newline):
         
@@ -954,6 +1025,12 @@ class BT_Grammar(Tokenizer):
                     left = right + 1
                     box_started = True
 
+
+                elif c == BACKSLASH and string[right+1] == LEFTSQUARE or\
+                    string[right+1] == RIGHTSQUARE:
+                    # frmt += string[right+1]
+                    pass
+                
                 elif c == NEWLINE:
                     frmt += "\\n"
 
@@ -965,6 +1042,19 @@ class BT_Grammar(Tokenizer):
             else:
                 if c == RIGHTSQUARE and string[right-1] != BACKSLASH:
                     var = self.sub_string(string, left, right)
+                    # Remove \[ and \] from substring
+                    _li_conts = ""
+                    if LEFTSQUARE in var or RIGHTSQUARE in var:
+                        var = var.replace(BACKSLASH, "")
+                        if LEFTSQUARE in var and RIGHTSQUARE in var:
+                            _li_conts = var[var.find(LEFTSQUARE)+1:var.find(RIGHTSQUARE)]
+                            _v, t = self.__eval_assign_values(vars_dict, [_li_conts, SEMI], _global_call, SEMI)
+                            _li_conts = LEFTSQUARE + _v + RIGHTSQUARE
+
+                        var = var[:var.find(LEFTSQUARE)]
+                    
+                    # print(var)
+                    
                     var_list = [var, ()]
                     val, _type = self.__eval_assign_values(
                         vars_dict, var_list, _global_call, SEMI)
@@ -986,7 +1076,14 @@ class BT_Grammar(Tokenizer):
                     elif _type == STR:
                         frmt += "%s"
 
-                    values += COMA + val
+                    if _li_conts:
+                        # _li_conts += SEMI
+                        # print(_li_conts)
+                        # v = self._convert_to_c_str([[_li_conts]], vars_dict, _global_call)
+                        # print(v)
+                        values += COMA + val+_li_conts
+                    else:
+                        values += COMA + val
 
                     box_started = False
 
@@ -1010,6 +1107,13 @@ class BT_Grammar(Tokenizer):
         tokens = iter(tokens)
         for toks in tokens:
             for idx, t in enumerate(toks):
+
+                if t.endswith("]"):
+                    c_str += self.__reassign_vals(vars_dict,
+                                                  toks, _global_call)
+                    break
+                    # val, _type = self.__eval_assign_values(vars_dict, [t, SEMI], _global_call, SEMI)
+                    # assign_by_idx()
 
                 if self._in_func_names(t):
                     t = self._in_func_names(t)
@@ -1058,7 +1162,7 @@ class BT_Grammar(Tokenizer):
 
                 
                 elif t.find(DOT) != -1 and t not in self._vars_dict["GLOBALS"]["global_vars"] and\
-                    t not in self._vars_dict["FUNCS"]:
+                    t not in self._vars_dict["FUNCS"] and not self.is_float(t):
 
                    print(f"{t} not Found!") 
                    break

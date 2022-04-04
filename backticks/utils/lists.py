@@ -4,7 +4,7 @@ def new_list(_type, var, _list, _len=False):
     # print(_list)
     str_to_ret = ""
     _list_len = len(_list)
-    print(f"LEN: {_list_len}")
+    # print(f"LEN: {_list_len}")
     # _header = f"{_type} {var}[{_list_len}];\n"
     _li = str(_list)
     _li = _li.replace(LEFTSQUARE, LEFTCURL)
@@ -22,10 +22,12 @@ def new_list(_type, var, _list, _len=False):
         str_to_ret += f"{var} = ({_type} *)calloc({_list_len}, sizeof({_type}));\n"
         str_to_ret += f"{var}_copy = {var};\n"
         for i in range(_list_len):
-            str_to_ret += f"{var}[{i}] = {_list[i]};\n"
+            str_to_ret += f"{var}[{i}] = {_list[i].strip()};\n"
 
         # return (_header, str_to_ret)
         return str_to_ret
 
-
+def assign_by_idx(var, idx, val):
+    str_to_ret = f"{var[[idx]]} = {val};"
+    return str_to_ret
 # def append_to_list(var, _val):
