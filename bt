@@ -18,11 +18,16 @@ args = sys.argv[2:]
 
 source = BT_to_C(bt_file_path)
 if len(args):
-    if args[0].lower() in ["true", "1", "y"]:
-        source.compile("gcc", True)
-else:
-    source.compile("gcc")
-source.run()
+    if args.count("build"):
+        if args.count("del_c"):
+            source.compile("gcc", True)
+        else:
+            source.compile("gcc", False)
+
+    if args.count("run"):
+        source.run()
+
+
 # print("GLOBALS\n")
 # pprint.pprint(source._vars_dict["GLOBALS"]["global_vars"])
 # print("\n\n")

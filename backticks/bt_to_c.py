@@ -24,6 +24,8 @@ class BT_to_C(BT_Grammar):
         
     
     def compile(self, compiler_path, del_c_h_files=False):
+        # print("Compiling..")
+
         src_files = set()
 
         # Append current file in conf
@@ -46,6 +48,9 @@ class BT_to_C(BT_Grammar):
 
         if del_c_h_files:
             os.system("rm -rf ./C")
+
+        # print("Finished.")
+        
 
 
     def run(self):

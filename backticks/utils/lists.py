@@ -1,4 +1,5 @@
 from backticks._tokens import *
+from .strings import *
 
 def new_list(_type, var, _list, _len=False):
     # print(_list)
@@ -21,10 +22,15 @@ def new_list(_type, var, _list, _len=False):
         str_to_ret += f"{var}_len = {_list_len};\n"
         str_to_ret += f"{var} = ({_type} *)calloc({_list_len}, sizeof({_type}));\n"
         str_to_ret += f"{var}_copy = {var};\n"
-        for i in range(_list_len):
-            str_to_ret += f"{var}[{i}] = {_list[i].strip()};\n"
 
-        # return (_header, str_to_ret)
+        if _type != CHARSTAR:    
+            for i in range(_list_len):
+                str_to_ret += f"{var}[{i}] = {_list[i].strip()};\n"
+        else:
+            for i in range(_list_len):
+                str_to_ret += new_str(f"{var}[{i}]", f"{_list[i].strip()}")
+                # str_to_ret += f"{var}[{i}] = {_list[i].strip()};\n"
+
         return str_to_ret
 
 def assign_by_idx(var, idx, val):

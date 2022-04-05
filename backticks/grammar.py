@@ -73,7 +73,7 @@ class BT_Grammar(Tokenizer):
                 #         tl = t.split(DOT)
                 #         if tl[0] in self._imports_dict:
                 #             tok_list[idx] = self._imports_dict[tl[0]] + DOT + tl[1]
-
+        
 
         while tok_list[_val_idx] != _del:
 
@@ -86,6 +86,7 @@ class BT_Grammar(Tokenizer):
             if self.is_string(v) or self.is_string(v, vars_dict) or\
                 self.is_string(v, self._vars_dict["GLOBALS"]["global_vars"]) or\
                 self.is_string(v, self._vars_dict["FUNCS"], func=True) or\
+                self.is_string(tok_list[_val_idx+1].strip()) or\
                 v == INPUT and tok_list[_val_idx+1] == LEFTBRACK:
 
                     # print("~"+v+"~")
@@ -296,6 +297,12 @@ class BT_Grammar(Tokenizer):
                         val += v
 
             elif v in [LEFTBRACK, RIGHTBRACK, LEFTCURL, RIGHTCURL]:
+                
+                # if v == LEFTBRACK and tok_list[-1] == RIGHTBRACK:
+                    # _list = 
+                    # val += LEFTCURL
+                    
+                # else:
                 val += v
 
             elif v in ["True", "False"]:
@@ -558,36 +565,41 @@ class BT_Grammar(Tokenizer):
                             _li_conts += tok_list[2][_l_idx]
                         _l_idx -= 1
 
+                    # print(_li_conts)
+
                     tok_list[2] = tok_list[2][:_l_idx]
 
                 if len(tok_list) > 1 and tok_list[2][0] == LEFTSQUARE and tok_list[2][-1] == RIGHTSQUARE:
-                    _t = tok_list[2][1:-1].split(COMA)
-                    _t = [self.__bt_to_c_str(i) for i in _t if self.is_string(i)]
-                    # _t = ""
-                    # for idx, i in enumerate(tok_list[2]):
-                        # if i.startswith(LEFTSQUARE):
-                        #     _t += LEFTCURL + i[i.find(LEFTSQUARE)+1:]
-                        #     # if self.is_string(i[i.find(LEFTSQUARE)+1:]):
-                        #     #     _t += LEFTCURL + self.__bt_to_c_str(i[i.find(LEFTSQUARE)+1:])
-                        # elif i.endswith(RIGHTSQUARE):
-                        #     _t += i[:i.find(RIGHTSQUARE)] + RIGHTCURL
-                        #     # if self.is_string(i[:i.find(RIGHTSQUARE)]):
-                        #     #     _t += self.__bt_to_c_str(i[:i.find(RIGHTSQUARE)])  + RIGHTCURL
-                        # else:
-                        # _t += i
-                    print(_t)
-                            
                     
-                    # print(_t)
+                    val, _type = self.__eval_assign_values(vars_dict, [tok_list[2], SEMI], _global_call, SEMI)
+                    # print(val, _type)
+                    if self.is_list(tok_list[2]):
+                        _t = val[1:-1]
+                        _new_list = ""
+                        _t = _t.replace(SPACE, "")
+                        if _t.find(TICK) != -1:
+                            _t = _t.replace(TICK, D_QUOTE)
+                            _type = STR
 
-                
+                        for i in _t:
+                            if self.is_string(i):
+                                _new_list += self.__bt_to_c_str(i)
+                            else:
+                                _new_list += i
+
+
+                        tok_list[2] = LEFTSQUARE + _new_list + RIGHTSQUARE
+
+                        val = tok_list[2]
+                    
 
                 elif self._in_func_names(tok_list[2]):
                     tok_list[2] = self._in_func_names(tok_list[2])
+                    
 
-
-                val, _type = self.__eval_assign_values(
-                    vars_dict, tok_list[2:], _global_call, SEMI)
+                if _type != STR:
+                    val, _type = self.__eval_assign_values(
+                        vars_dict, tok_list[2:], _global_call, SEMI)
 
                 # print(var)
                 # print(val, _type)
@@ -633,12 +645,19 @@ class BT_Grammar(Tokenizer):
                     self._global_vars_list.append(f"{_type} {var}")
                 else:
                     self._global_vars_list.append(f"{_type} *{var}")
+                    self._global_vars_list.append(f"{_type} *{var}_copy")
+                    self._global_vars_list.append(f"size_t {var}_len")
 
                 if _type == CHARSTAR and not _list:
                     return new_str(self.bin_name+DOT+var, val)
+                
+                # elif _type == CHARSTAR and _list:
+                #     print(val, _type)
+                    # return new_str(self.bin_name+DOT+var, val) 
+
                 elif _list:
-                    self._global_vars_list.append(f"{_type} *{var}_copy")
-                    self._global_vars_list.append(f"size_t {var}_len")
+                    # self._global_vars_list.append(f"{_type} *{var}_copy")
+                    # self._global_vars_list.append(f"size_t {var}_len")
                     return new_list(_type, self.bin_name+DOT+var,\
                          val.replace(LEFTSQUARE, "").\
                             replace(RIGHTSQUARE, "").split(COMA))

@@ -93,3 +93,18 @@ class Lexer:
             return True
 
         return False
+
+    def is_list(self, string, vars_dict=None, func=False):
+        
+        if func:
+            if string in vars_dict:
+                return vars_dict[string][0][2]
+                   
+        elif vars_dict:
+            if string in vars_dict:
+                return vars_dict[string][2]
+
+        elif string[0] == LEFTSQUARE and string[-1] == RIGHTSQUARE:
+            return True
+
+        return False
