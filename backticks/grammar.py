@@ -252,11 +252,16 @@ class BT_Grammar(Tokenizer):
                         str_found = True
 
                     elif self.is_string(v, vars_dict):
-
+                        
                         if _global_call:
-                            if v.find(DOT) == -1:
+                            if v.find(DOT) == -1 and vars_dict[v][2] != "__FOR__":
                                 val += self.bin_name + DOT + v
+                            
+                            elif v.find(DOT) == -1 and vars_dict[v][2] == "__FOR__":
+                                val += v
+
                             else:
+                                
                                 vl = v.split(DOT)
                                 if vl[0] in self._imports_dict:
                                     val += self._imports_dict[vl[0]] + DOT + vl[1]
@@ -576,16 +581,16 @@ class BT_Grammar(Tokenizer):
                     if self.is_list(tok_list[2]):
                         _t = val[1:-1]
                         _new_list = ""
-                        _t = _t.replace(SPACE, "")
+
                         if _t.find(TICK) != -1:
                             _t = _t.replace(TICK, D_QUOTE)
                             _type = STR
 
                         for i in _t:
-                            if self.is_string(i):
-                                _new_list += self.__bt_to_c_str(i)
-                            else:
+                            if _type == STR:
                                 _new_list += i
+                            else:
+                                _new_list += i.replace(SPACE, "")
 
 
                         tok_list[2] = LEFTSQUARE + _new_list + RIGHTSQUARE
@@ -651,13 +656,7 @@ class BT_Grammar(Tokenizer):
                 if _type == CHARSTAR and not _list:
                     return new_str(self.bin_name+DOT+var, val)
                 
-                # elif _type == CHARSTAR and _list:
-                #     print(val, _type)
-                    # return new_str(self.bin_name+DOT+var, val) 
-
                 elif _list:
-                    # self._global_vars_list.append(f"{_type} *{var}_copy")
-                    # self._global_vars_list.append(f"size_t {var}_len")
                     return new_list(_type, self.bin_name+DOT+var,\
                          val.replace(LEFTSQUARE, "").\
                             replace(RIGHTSQUARE, "").split(COMA))
@@ -671,9 +670,9 @@ class BT_Grammar(Tokenizer):
                 if _type == CHARSTAR and not _list:
                     return CHARSTAR + new_str(var, val)
                 elif _list:
-                    return new_list(_type, self.bin_name+DOT+var,\
+                    return new_list(_type, var,\
                          val.replace(LEFTSQUARE, "").\
-                            replace(RIGHTSQUARE, "").split(COMA))
+                            replace(RIGHTSQUARE, "").split(COMA), _func=True)
                 if not _li_conts:
                     return f"{_type} {var} = {val};\n"
                 else:
@@ -1040,15 +1039,15 @@ class BT_Grammar(Tokenizer):
             c = string[right]
 
             if not box_started:
-                if c == LEFTSQUARE and string[right-1] != BACKSLASH:
+                if c == LEFTCURL and string[right-1] != BACKSLASH:
                     left = right + 1
                     box_started = True
 
 
-                elif c == BACKSLASH and string[right+1] == LEFTSQUARE or\
-                    string[right+1] == RIGHTSQUARE:
-                    # frmt += string[right+1]
-                    pass
+                # elif c == BACKSLASH and string[right+1] == LEFTCURL or\
+                #     string[right+1] == RIGHTCURL:
+                #     # frmt += string[right+1]
+                #     pass
                 
                 elif c == NEWLINE:
                     frmt += "\\n"
@@ -1059,7 +1058,7 @@ class BT_Grammar(Tokenizer):
                     frmt += c
 
             else:
-                if c == RIGHTSQUARE and string[right-1] != BACKSLASH:
+                if c == RIGHTCURL and string[right-1] != BACKSLASH:
                     var = self.sub_string(string, left, right)
                     # Remove \[ and \] from substring
                     _li_conts = ""
@@ -1117,6 +1116,57 @@ class BT_Grammar(Tokenizer):
         result += values + print_tail
 
         return result
+    
+    def __for(self, vars_dict, toks, _global_call):
+        str_to_ret = ""
+        _k = "_i_"
+        _v = ""
+        _obj = ""
+
+        sub_toks = []
+
+        if toks[2] == IN:
+            _v = toks[1]
+            _obj = toks[3]
+            sub_toks = toks[4:]
+
+        elif toks[4] == IN:
+            _k = toks[1]
+            _v = toks[3]
+            _obj = toks[5]
+            sub_toks = toks[6:]
+
+        _start = None
+        _end = None
+        
+        if _obj.endswith(RIGHTSQUARE):
+            _sliced_str = _obj[_obj.find(LEFTSQUARE)+1:_obj.find(RIGHTSQUARE)]
+            _obj = _obj[:_obj.find(LEFTSQUARE)]
+        
+            _v_, _t_ = self.__eval_assign_values(vars_dict, [_sliced_str, ()], _global_call, SEMI)
+
+            if _v_.find(COLON) != -1:
+                _start, _end = _v_.split(COLON)
+            
+        
+        val, _type = self.__eval_assign_values(vars_dict, [_obj, ()], _global_call, SEMI)
+
+        tmp_dict = vars_dict.copy()
+        tmp_dict.update({_v: [0, _type, "__FOR__"]})
+
+        # print(sub_toks)
+
+        _s_tks = self._convert_to_c_str([sub_toks], tmp_dict, _global_call)
+        
+        # print(f"_k = {_k} | _v = {_v} | _obj = {_obj}")
+        # print(val, _type)
+        if _type == STR:
+            _type = CHARSTAR
+            
+        str_to_ret += access_elem_by_ref(_type, _k, _v, val, _s_tks, _start, _end)
+
+        return str_to_ret
+        
 
     def _convert_to_c_str(self, tokens, vars_dict, _global_call=True):
 
@@ -1205,12 +1255,16 @@ class BT_Grammar(Tokenizer):
                     elif t in [IF, ELIF, ELSE]:
                         c_str += self.__if_elif_else(vars_dict,
                                                      toks, _global_call)
-
                         break
+
 
                     elif t == LOOP:
                         c_str += self.__loop_until_for(vars_dict,
                                                        toks, _global_call)
+
+                    elif t == FOR:
+                        # print(toks)
+                        c_str += self.__for(vars_dict, toks, _global_call)
 
                     elif t == BREAK:
                         c_str += BREAK + SEMI + NEWLINE

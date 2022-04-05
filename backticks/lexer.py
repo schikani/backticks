@@ -52,7 +52,7 @@ class Lexer:
 	    string ==  IF or string ==  ELIF or\
 	    string ==  ELSE or string ==  RETURN or\
 	    string ==  INT or string ==  BOOL or\
-        string ==  FLOAT or string ==  STR:
+        string ==  FLOAT or string ==  STR or string == FOR:
             return True
         else:
 	        return False

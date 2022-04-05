@@ -148,7 +148,7 @@ class Tokenizer(Lexer):
             # try:
             count = 0
             while (count < len(tokens)):
-                if tokens[count] in [FUNCTION, PUB_FUNC, IF, ELIF, ELSE, LOOP]:
+                if tokens[count] in [FUNCTION, PUB_FUNC, IF, ELIF, ELSE, LOOP, FOR]:
                     funcs = []
 
                     closing = 0
@@ -202,7 +202,7 @@ class Tokenizer(Lexer):
                     count += 1
 
                 # for i in self.tokens:
-                #     print(i)
+                # print(self.tokens)
 
             # except IndexError:
                 # print(f"Current Line: {self.current_line_no}")

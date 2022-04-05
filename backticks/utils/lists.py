@@ -1,7 +1,7 @@
 from backticks._tokens import *
 from .strings import *
 
-def new_list(_type, var, _list, _len=False):
+def new_list(_type, var, _list, _len=False, _func=False):
     # print(_list)
     str_to_ret = ""
     _list_len = len(_list)
@@ -19,9 +19,14 @@ def new_list(_type, var, _list, _len=False):
 
 
     else:
-        str_to_ret += f"{var}_len = {_list_len};\n"
-        str_to_ret += f"{var} = ({_type} *)calloc({_list_len}, sizeof({_type}));\n"
-        str_to_ret += f"{var}_copy = {var};\n"
+        if not _func:
+            str_to_ret += f"{var}_len = {_list_len};\n"
+            str_to_ret += f"{var} = ({_type} *)calloc({_list_len}, sizeof({_type}));\n"
+            str_to_ret += f"{var}_copy = {var};\n"
+        else:
+            str_to_ret += f"size_t {var}_len = {_list_len};\n"
+            str_to_ret += f"{_type} *{var} = ({_type} *)calloc({_list_len}, sizeof({_type}));\n"
+            str_to_ret += f"{_type} *{var}_copy = {var};\n"
 
         if _type != CHARSTAR:    
             for i in range(_list_len):
@@ -36,4 +41,20 @@ def new_list(_type, var, _list, _len=False):
 def assign_by_idx(var, idx, val):
     str_to_ret = f"{var[[idx]]} = {val};"
     return str_to_ret
-# def append_to_list(var, _val):
+
+def access_elem_by_ref(_type, _k, _v, _list_name, for_body, _start=None, _end=None):
+
+    if not _start:
+        _start = 0
+
+    if not _end:
+        _end = f"{_list_name}_len"
+
+    str_to_ret = f'''for (size_t {_k} = {_start}; {_k} < {_end}; ++{_k})
+{{
+    {_type} {_v} = {_list_name}[{_k}];
+    {for_body}
+    
+}}'''
+
+    return str_to_ret
