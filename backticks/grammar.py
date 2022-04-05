@@ -1151,6 +1151,12 @@ class BT_Grammar(Tokenizer):
         
         val, _type = self.__eval_assign_values(vars_dict, [_obj, ()], _global_call, SEMI)
 
+        
+        if _end.startswith(SUB):
+            _end = val + "_len" +_end
+        if _start.startswith(SUB):
+            _start = val+"_len" + _start
+
         tmp_dict = vars_dict.copy()
         tmp_dict.update({_v: [0, _type, "__FOR__"]})
 
