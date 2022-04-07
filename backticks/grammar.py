@@ -1,3 +1,4 @@
+from numpy import bool_
 from ._tokens import *
 from .tokenizer import Tokenizer
 from .c_templates import *
@@ -74,7 +75,7 @@ class BT_Grammar(Tokenizer):
                 #         if tl[0] in self._imports_dict:
                 #             tok_list[idx] = self._imports_dict[tl[0]] + DOT + tl[1]
         
-
+        # print(tok_list)
         while tok_list[_val_idx] != _del:
 
             v = tok_list[_val_idx]
@@ -90,7 +91,16 @@ class BT_Grammar(Tokenizer):
                 self.is_string(tok_list[_val_idx+1]) or\
                 v == INPUT and tok_list[_val_idx+1] == LEFTBRACK:
 
-                    # print(tok_list)
+                    if self.is_list(v) and v[0] == LEFTSQUARE:
+                        if self.is_float(v):
+                            float_found = True
+
+                        elif self.is_int(v):
+                            int_found = True
+                        
+                        elif self.is_bool(v):
+                            bool_found = True
+
 
                     str1 = ""
                     str1_params = ""
@@ -105,12 +115,12 @@ class BT_Grammar(Tokenizer):
                         else:
                             str1 = tok_list[0]
 
-                            # print(str1)
                         
                         # a[0] case
                         if self.is_list(str1):
                             str1, str1_params = str1.split(LEFTSQUARE)
                             str1_params = "[" + str1_params
+
                             
 
                         if tok_list.count(LEFTBRACK):
@@ -212,8 +222,11 @@ class BT_Grammar(Tokenizer):
                         elif self.is_string(str1, vars_dict):
                             # print("~"+str1+"~")
                             if _global_call:
-                                if str1.find(DOT) == -1:
+                                if str1.find(DOT) == -1 and vars_dict[str1][2] != "__FOR__":
                                     str1 = self.bin_name + DOT + str1 + str1_params
+                                
+                                elif str1.find(DOT) == -1 and vars_dict[str1][2] == "__FOR__":
+                                    str1 = str1 + str1_params
                                 else:
                                     sl = str1.split(DOT)
                                     if sl[0] in self._imports_dict:
@@ -246,8 +259,12 @@ class BT_Grammar(Tokenizer):
                             # print("~"+str2+"~")
 
                             if _global_call:
-                                if str2.find(DOT) == -1:
+                                if str2.find(DOT) == -1 and vars_dict[str2][2] != "__FOR__":
                                     str2 = self.bin_name + DOT + str2 + str2_params
+                                
+                                elif str2.find(DOT) == -1 and vars_dict[str2][2] == "__FOR__":
+                                    str2 = str2 + str2_params
+
                                 else:
                                     sl = str2.split(DOT)
                                     if sl[0] in self._imports_dict:
@@ -602,11 +619,21 @@ class BT_Grammar(Tokenizer):
         val = ""
         _type = ""
         _li_conts = ""
-        _list = False
+        _dynamic_list = False
+        _static_list = False
+        _static_len = ""
+
 
         if var.endswith("[]"):
             var = var[:var.find(LEFTSQUARE)]
-            _list = True
+            _dynamic_list = True
+        
+        elif self.is_list(var):
+            _static_len = var[var.find(LEFTSQUARE)+1:var.find(RIGHTSQUARE)]
+            var = var[:var.find(LEFTSQUARE)]
+            _static_list = True
+
+            # print(_static_len)
         
         # print(tok_list[2])
 
@@ -619,18 +646,11 @@ class BT_Grammar(Tokenizer):
 
             if assign == EQUALS:
                 
-                # _li_conts = ""
-
-                if not _list and tok_list[2].endswith(RIGHTSQUARE):
-                    _l_idx = len(tok_list[2]) - 1
-                    while tok_list[2][_l_idx] != LEFTSQUARE:
-                        if tok_list[2][_l_idx] != RIGHTSQUARE:
-                            _li_conts += tok_list[2][_l_idx]
-                        _l_idx -= 1
-
-                    # print(_li_conts)
-
-                    tok_list[2] = tok_list[2][:_l_idx]
+                # Case let 'a = nums[0]'
+                if not _dynamic_list and not _static_list and tok_list[2].endswith(RIGHTSQUARE):
+                    _li_conts = tok_list[2][tok_list[2].find(LEFTSQUARE)+1:tok_list[2].find(RIGHTSQUARE)]
+                    tok_list[2] = tok_list[2][:tok_list[2].find(LEFTSQUARE)]
+                    # print(tok_list[2], _li_conts)
 
 
                 if len(tok_list) > 1 and tok_list[2][0] == LEFTSQUARE and tok_list[2][-1] == RIGHTSQUARE:
@@ -672,7 +692,13 @@ class BT_Grammar(Tokenizer):
 
                 vars_dict[var].append(val)
                 vars_dict[var].append(_type)
-                vars_dict[var].append(_list)
+                if _dynamic_list:
+                    vars_dict[var].append("__LIST_DY__")
+                elif _static_list:
+                    vars_dict[var].append("__LIST_ST__")
+                else:
+                    vars_dict[var].append(False)
+                    
 
             elif assign == COLON:
                 _type = tok_list[2]
@@ -698,8 +724,12 @@ class BT_Grammar(Tokenizer):
 
                 vars_dict[var].append(val)
                 vars_dict[var].append(_type)
-                vars_dict[var].append(_list)
-
+                if _dynamic_list:
+                    vars_dict[var].append("__LIST_DY__")
+                elif _static_list:
+                    vars_dict[var].append("__LIST_ST__")
+                else:
+                    vars_dict[var].append(False)
 
 
             if _type == STR:
@@ -707,20 +737,31 @@ class BT_Grammar(Tokenizer):
 
 
             if _global_call:
-                if not _list:
+                if not _dynamic_list and not _static_list:
                     self._global_vars_list.append(f"{_type} {var}")
                 else:
-                    self._global_vars_list.append(f"{_type} *{var}")
-                    self._global_vars_list.append(f"{_type} *{var}_copy")
+                    if _dynamic_list:
+                        self._global_vars_list.append(f"{_type} *{var}")
+                        self._global_vars_list.append(f"{_type} *{var}_copy")
+
+                    elif _static_list:
+                        self._global_vars_list.append(f"{_type} {var}[{_static_len}]")
+
                     self._global_vars_list.append(f"size_t {var}_len")
 
-                if _type == CHARSTAR and not _list:
+                if _type == CHARSTAR and not _dynamic_list and not _static_list:
                     return new_str(self.bin_name+DOT+var, val)
                 
-                elif _list:
+                elif _dynamic_list:
                     return new_list(_type, self.bin_name+DOT+var,\
                          val.replace(LEFTSQUARE, "").\
                             replace(RIGHTSQUARE, "").split(COMA))
+                
+                elif _static_list:
+                    return new_list(_type, self.bin_name+DOT+var,\
+                         val.replace(LEFTSQUARE, "").\
+                            replace(RIGHTSQUARE, "").split(COMA), _static_len)
+
                 else:
                     if not _li_conts:
                         return f"{self.bin_name}.{var} = {val};\n"
@@ -728,9 +769,9 @@ class BT_Grammar(Tokenizer):
                         return f"{self.bin_name}.{var} = {val}{_li_conts};\n"
 
             else:
-                if _type == CHARSTAR and not _list:
+                if _type == CHARSTAR and not _dynamic_list and not _static_list:
                     return CHARSTAR + new_str(var, val)
-                elif _list:
+                elif _dynamic_list:
                     return new_list(_type, var,\
                          val.replace(LEFTSQUARE, "").\
                             replace(RIGHTSQUARE, "").split(COMA), _func=True)
