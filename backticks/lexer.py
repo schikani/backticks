@@ -106,5 +106,11 @@ class Lexer:
 
         elif string[0] == LEFTSQUARE and string[-1] == RIGHTSQUARE:
             return True
+        
+        elif string.count(LEFTSQUARE) > 0 and string.count(RIGHTSQUARE) > 0 and\
+            string.count(LEFTSQUARE) == string.count(RIGHTSQUARE):
+                # print(7777)
+                return True
+
 
         return False

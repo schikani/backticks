@@ -78,27 +78,41 @@ class BT_Grammar(Tokenizer):
         while tok_list[_val_idx] != _del:
 
             v = tok_list[_val_idx]
+            # print(v)
 
 
             if self._in_func_names(v):
                 v = self._in_func_names(v)
 
-            if self.is_string(v) or self.is_string(v, vars_dict) or\
+            if self.is_list(v) or self.is_string(v) or self.is_string(v, vars_dict) or\
                 self.is_string(v, self._vars_dict["GLOBALS"]["global_vars"]) or\
                 self.is_string(v, self._vars_dict["FUNCS"], func=True) or\
-                self.is_string(tok_list[_val_idx+1].strip()) or\
+                self.is_string(tok_list[_val_idx+1]) or\
                 v == INPUT and tok_list[_val_idx+1] == LEFTBRACK:
 
-                    # print("~"+v+"~")
+                    # print(tok_list)
 
                     str1 = ""
                     str1_params = ""
                     str2 = ""
                     str2_params = ""
 
+
                     # Compare
                     if tok_list.count(EQUALS) == 2:
-                        str1 = v
+                        if v != EQUALS:
+                            str1 = v
+                        else:
+                            str1 = tok_list[0]
+
+                            # print(str1)
+                        
+                        # a[0] case
+                        if self.is_list(str1):
+                            str1, str1_params = str1.split(LEFTSQUARE)
+                            str1_params = "[" + str1_params
+                            
+
                         if tok_list.count(LEFTBRACK):
                             if tok_list[_val_idx+1] == LEFTBRACK:
                                 _val_idx += 2
@@ -109,6 +123,14 @@ class BT_Grammar(Tokenizer):
                                 _val_idx += 3
 
                                 str2 = tok_list[_val_idx]
+
+                                # print(str2)
+
+                                if self.is_list(str2):
+                                    str2, str2_params = str2.split(LEFTSQUARE)
+                                    str2_params = "[" + str2_params 
+
+                                # print(str2)
 
                                 if tok_list[_val_idx+1] == LEFTBRACK:
                                     _val_idx += 2
@@ -126,6 +148,10 @@ class BT_Grammar(Tokenizer):
                                 _val_idx += 3
                                 str2 = tok_list[_val_idx]
 
+
+                                if str2 == LEFTCURL:
+                                    str2 = tok_list[_val_idx-1]
+
                                 if tok_list[_val_idx+1] == LEFTBRACK:
                                     _val_idx += 2
                                     while tok_list[_val_idx] != RIGHTBRACK:
@@ -133,6 +159,12 @@ class BT_Grammar(Tokenizer):
                                         _val_idx += 1
                                         
                                     _val_idx += 1
+
+                                
+                                if self.is_list(str2):
+                                    str2, str2_params = str2.split(LEFTSQUARE)
+                                    str2_params = "[" + str2_params
+
                                 
                                 if self._in_func_names(str2):
                                     str2 = self._in_func_names(str2)
@@ -141,7 +173,12 @@ class BT_Grammar(Tokenizer):
                             _val_idx += 3
                             str2 = tok_list[_val_idx]
 
-                        if str1_params:
+                            if self.is_list(str2):
+                                str2, str2_params = str2.split(LEFTSQUARE)
+                                str2_params = "[" + str2_params
+                            
+
+                        if str1_params and str1_params.find(COMA):
                             s1_t = str1_params.split(COMA)
                             new_s1_t = []
                             for idx, v in enumerate(s1_t):
@@ -153,7 +190,7 @@ class BT_Grammar(Tokenizer):
                             _val, _type = self.__eval_assign_values(vars_dict, new_s1_t, _global_call, SEMI)
                             str1_params = _val
                         
-                        if str2_params:
+                        if str2_params and str2_params.find(COMA):
                             s2_t = str2_params.split(COMA)
                             new_s2_t = []
                             for idx, v in enumerate(s2_t):
@@ -166,7 +203,8 @@ class BT_Grammar(Tokenizer):
                             str2_params = _val
 
 
-                        # print(str1, str2)
+                        # print(str1, str1_params)
+                        # print(str2, str2_params)
 
                         if self.is_string(str1):
                             str1 = self.__bt_to_c_str(str1)
@@ -175,7 +213,7 @@ class BT_Grammar(Tokenizer):
                             # print("~"+str1+"~")
                             if _global_call:
                                 if str1.find(DOT) == -1:
-                                    str1 = self.bin_name + DOT + str1
+                                    str1 = self.bin_name + DOT + str1 + str1_params
                                 else:
                                     sl = str1.split(DOT)
                                     if sl[0] in self._imports_dict:
@@ -185,7 +223,7 @@ class BT_Grammar(Tokenizer):
                         elif self.is_string(str1, self._vars_dict["GLOBALS"]["global_vars"]):
                             # print("~"+str1+"~")
 
-                            str1 = self.bin_name + DOT + str1
+                            str1 = self.bin_name + DOT + str1 + str1_params
                             # print(str1)
 
                         elif self.is_string(str1, self._vars_dict["FUNCS"], func=True):
@@ -209,7 +247,7 @@ class BT_Grammar(Tokenizer):
 
                             if _global_call:
                                 if str2.find(DOT) == -1:
-                                    str2 = self.bin_name + DOT + str2
+                                    str2 = self.bin_name + DOT + str2 + str2_params
                                 else:
                                     sl = str2.split(DOT)
                                     if sl[0] in self._imports_dict:
@@ -217,7 +255,7 @@ class BT_Grammar(Tokenizer):
 
                         elif self.is_string(str2, self._vars_dict["GLOBALS"]["global_vars"]):
                             if str2.find(DOT) == -1:
-                                str2 = self.bin_name + DOT + str2
+                                str2 = self.bin_name + DOT + str2 + str2_params
                             else:
                                 sl = str2.split(DOT)
                                 if sl[0] in self._imports_dict:
@@ -233,7 +271,7 @@ class BT_Grammar(Tokenizer):
                             str2 += LEFTBRACK + str2_params + RIGHTBRACK
                             # _val_idx += 2
 
-                        val += compare_str(str1, str2) + EQUALS + EQUALS + ZERO
+                        val = compare_str(str1, str2) + EQUALS + EQUALS + ZERO
 
                         # _val_idx += 4
                         # continue
@@ -252,7 +290,6 @@ class BT_Grammar(Tokenizer):
                         str_found = True
 
                     elif self.is_string(v, vars_dict):
-                        
                         if _global_call:
                             if v.find(DOT) == -1 and vars_dict[v][2] != "__FOR__":
                                 val += self.bin_name + DOT + v
@@ -274,8 +311,12 @@ class BT_Grammar(Tokenizer):
 
                     elif self.is_string(v, self._vars_dict["GLOBALS"]["global_vars"]):
 
-                        if v.find(DOT) == -1:
-                                val += self.bin_name + DOT + v
+                        if v.find(DOT) == -1 and self._vars_dict["GLOBALS"]["global_vars"][v][2] != "__FOR__":
+                            val += self.bin_name + DOT + v
+
+                        elif v.find(DOT) == -1 and self._vars_dict["GLOBALS"]["global_vars"][v][2] == "__FOR__":
+                            val += v
+                            
                         else:
                             # print("~"+v+"~")
                             vl = v.split(DOT)
@@ -345,9 +386,12 @@ class BT_Grammar(Tokenizer):
 
                     if _global_call:
                         if not str_found:
-                            if v.find(DOT) == -1:
-                                # print(v)
+                            if v.find(DOT) == -1 and vars_dict[v][2] != "__FOR__":
                                 val += self.bin_name + DOT + v
+
+                            elif v.find(DOT) == -1 and vars_dict[v][2] == "__FOR__":
+                                val += v
+
                             else:
                                 vl = v.split(DOT)
                                 if vl[0] in self._imports_dict:
@@ -444,10 +488,24 @@ class BT_Grammar(Tokenizer):
         t = toks[0]
         # print(toks)
         
-        str_to_ret = ''
+        str_to_ret = ""
+
+        # List append condition 'a <- 45, 55'
+        if toks[1] == S_THAN and toks[2] == SUB:
+            _v, _t = self.__eval_assign_values(vars_dict, toks, _global_call, SEMI)
+            # print(_v, _t)
+            if _t == STR:
+                _t = CHARSTAR
+            _list_var, _vals = _v.split(SUB)
+            _list_var = _list_var[:-1]
+            _vals_list = _vals.split(COMA)
+            # print(_list_var, _vals_list)
+            str_to_ret += append_list(_t, _list_var, _vals_list)
+            # print(str_to_ret)
+
 
         # Check for '+=', '-=', '*=', '\=' condition
-        if toks[1] in [ADD, SUB, MUL, DIV] and toks[2] == EQUALS:
+        elif toks[1] in [ADD, SUB, MUL, DIV] and toks[2] == EQUALS:
 
             if self._in_func_names(toks[3]):
                 toks[3] = self._in_func_names(toks[3])
@@ -474,7 +532,6 @@ class BT_Grammar(Tokenizer):
                 vars_dict, toks[2:toks.index(SEMI)+1], _global_call, SEMI)
 
         if not _global_call and t in vars_dict.keys():
-
             # String or Number
             if toks[1] == ADD and toks[2] == EQUALS:
                 if _type == STR:
@@ -508,9 +565,8 @@ class BT_Grammar(Tokenizer):
 
                 # Write correct file name from alias `t3.count = test3.count`
                 if t in self._vars_dict["GLOBALS"]["global_vars"]:
-                    t = self._imports_dict[tl[0]] + DOT + tl[1]                
+                    t = self._imports_dict[tl[0]] + DOT + tl[1]
 
-            
             # String or Number
             if toks[1] == ADD and toks[2] == EQUALS:
                 if _type == STR:
@@ -523,7 +579,7 @@ class BT_Grammar(Tokenizer):
                 str_to_ret += t + toks[1] + EQUALS + val + SEMI + NEWLINE
 
             # Case '='
-            else:
+            elif toks[1] == EQUALS:
                 if _type == STR:
                     str_to_ret += free_str(t)
                     str_to_ret += new_str(t, val)
@@ -551,6 +607,8 @@ class BT_Grammar(Tokenizer):
         if var.endswith("[]"):
             var = var[:var.find(LEFTSQUARE)]
             _list = True
+        
+        # print(tok_list[2])
 
         # Check if the variable is already defined
         if var not in vars_dict.keys():
@@ -573,6 +631,7 @@ class BT_Grammar(Tokenizer):
                     # print(_li_conts)
 
                     tok_list[2] = tok_list[2][:_l_idx]
+
 
                 if len(tok_list) > 1 and tok_list[2][0] == LEFTSQUARE and tok_list[2][-1] == RIGHTSQUARE:
                     
@@ -605,11 +664,13 @@ class BT_Grammar(Tokenizer):
                 if _type != STR:
                     val, _type = self.__eval_assign_values(
                         vars_dict, tok_list[2:], _global_call, SEMI)
+                
 
-                # print(var)
-                # print(val, _type)
+                if _li_conts:
+                    val += "[" + _li_conts + "]"
 
-                vars_dict[var].append(val+_li_conts)
+
+                vars_dict[var].append(val)
                 vars_dict[var].append(_type)
                 vars_dict[var].append(_list)
 
@@ -664,7 +725,7 @@ class BT_Grammar(Tokenizer):
                     if not _li_conts:
                         return f"{self.bin_name}.{var} = {val};\n"
                     else:
-                        return f"{self.bin_name}.{var} = {val}[{_li_conts}];\n"
+                        return f"{self.bin_name}.{var} = {val}{_li_conts};\n"
 
             else:
                 if _type == CHARSTAR and not _list:
@@ -697,11 +758,11 @@ class BT_Grammar(Tokenizer):
                 print_str = print_str[1:-1]
             else:
                 # Maybe a function
-                print_str = LEFTSQUARE + print_str + RIGHTSQUARE
+                print_str = LEFTCURL + print_str + RIGHTCURL
             
             # When empty string is found, evaluate the variable inside []
             if not print_str:
-                print_str = LEFTSQUARE + tok_list[0] + RIGHTSQUARE
+                print_str = LEFTCURL + tok_list[0] + RIGHTCURL
         
         elif self.is_string(print_str, self._vars_dict["GLOBALS"]["global_vars"]):
             print_str = self._vars_dict["GLOBALS"]["global_vars"][print_str][0][1:-1]
@@ -713,11 +774,11 @@ class BT_Grammar(Tokenizer):
                 print_str += st
 
             print_str = print_str[:-2]
-            print_str = LEFTSQUARE + print_str + RIGHTSQUARE
+            print_str = LEFTCURL + print_str + RIGHTCURL
 
 
         else:
-            print_str = LEFTSQUARE + print_str + RIGHTSQUARE
+            print_str = LEFTCURL + print_str + RIGHTCURL
 
         if newline:
             str_to_ret += self.__string_parser(print_str, vars_dict, _global_call, new_line=True)
@@ -805,6 +866,7 @@ class BT_Grammar(Tokenizer):
 
             # Multi-line body
             if LEFTCURL in tok_list[1:]:
+                # print(tok_list[1:])
                 _val, _type = self.__eval_assign_values(
                     vars_dict, tok_list[1:], _global_call, LEFTCURL)
 
@@ -853,6 +915,10 @@ class BT_Grammar(Tokenizer):
             elif tok_list[start] == LOOP:
                 str_to_ret += self.__loop_until_for(
                     vars_dict, tok_list[start:], _global_call)
+                break
+                
+            elif tok_list[start] == FOR:
+                str_to_ret += self.__for(vars_dict, tok_list[start:], _global_call)
                 break
 
             elif tok_list[start] == RIGHTCURL:
@@ -1123,18 +1189,20 @@ class BT_Grammar(Tokenizer):
         _v = ""
         _obj = ""
 
-        sub_toks = []
+        for_body_toks = []
 
         if toks[2] == IN:
             _v = toks[1]
             _obj = toks[3]
-            sub_toks = toks[4:]
+            for_body_toks = toks[4:-1]
 
         elif toks[4] == IN:
             _k = toks[1]
             _v = toks[3]
             _obj = toks[5]
-            sub_toks = toks[6:]
+            for_body_toks = toks[6:-1]
+
+            # print(for_body_toks)
 
         _start = None
         _end = None
@@ -1151,25 +1219,61 @@ class BT_Grammar(Tokenizer):
         
         val, _type = self.__eval_assign_values(vars_dict, [_obj, ()], _global_call, SEMI)
 
-        
-        if _end.startswith(SUB):
-            _end = val + "_len" +_end
-        if _start.startswith(SUB):
-            _start = val+"_len" + _start
-
-        tmp_dict = vars_dict.copy()
-        tmp_dict.update({_v: [0, _type, "__FOR__"]})
-
-        # print(sub_toks)
-
-        _s_tks = self._convert_to_c_str([sub_toks], tmp_dict, _global_call)
-        
-        # print(f"_k = {_k} | _v = {_v} | _obj = {_obj}")
         # print(val, _type)
+
+        if _end:
+            if _end.startswith(SUB):
+                _end = val + "_len" +_end
+                
+        if _start:
+            if _start.startswith(SUB):
+                _start = val+"_len" + _start
+
+        vars_dict.update({_v: [_v, _type, "__FOR__"]})
+
+        for_body = ""
+
+        start = 1
+        sub_toks = []
+        while start < len(for_body_toks):
+            
+            if for_body_toks[start] == FOR:
+                for_body += self.__for(vars_dict, for_body_toks[start:], _global_call)
+                break
+
+            elif for_body_toks[start] in [IF, ELIF, ELSE]:
+                for_body += self.__if_elif_else(vars_dict,
+                                                  for_body_toks[start:], _global_call)
+                break
+
+            elif for_body_toks[start] == LOOP:
+                for_body += self.__loop_until_for(
+                    vars_dict, for_body_toks[start:], _global_call)
+                break
+
+            elif for_body_toks[start] == RIGHTCURL:
+                for_body += for_body_toks[start]
+                start += 1
+
+            elif for_body_toks[start] != SEMI:
+
+                sub_toks.append(for_body_toks[start])
+                start += 1
+
+            elif for_body_toks[start] == SEMI:
+
+                sub_toks.append(for_body_toks[start])
+                for_body += self._convert_to_c_str(
+                    [sub_toks], vars_dict, _global_call)
+                sub_toks.clear()
+
+                start += 1
+            
+
         if _type == STR:
             _type = CHARSTAR
             
-        str_to_ret += access_elem_by_ref(_type, _k, _v, val, _s_tks, _start, _end)
+        str_to_ret += access_elem_by_ref(_type, _k, _v, val, for_body, _start, _end)
 
         return str_to_ret
         
@@ -1187,8 +1291,6 @@ class BT_Grammar(Tokenizer):
                     c_str += self.__reassign_vals(vars_dict,
                                                   toks, _global_call)
                     break
-                    # val, _type = self.__eval_assign_values(vars_dict, [t, SEMI], _global_call, SEMI)
-                    # assign_by_idx()
 
                 if self._in_func_names(t):
                     t = self._in_func_names(t)
@@ -1243,7 +1345,7 @@ class BT_Grammar(Tokenizer):
                    break
 
 
-                elif t == FUNCTION or t == PUB_FUNC:
+                elif t == FUNCTION or t == PUB_FUNC and toks[idx+1] != SUB:
                     current_func = toks[idx+1]
                     self.__func(current_func, toks)
 
@@ -1288,9 +1390,9 @@ class BT_Grammar(Tokenizer):
 
                 # While reassigning varibles, check for varibale scope or if it is a function
                 elif (t in vars_dict.keys() and toks[idx+1] == EQUALS) or\
-                    (t in vars_dict.keys() and toks[idx+1] in [ADD, SUB, MUL, DIV] and toks[idx+2] == EQUALS) or\
+                    (t in vars_dict.keys() and toks[idx+1] in [ADD, SUB, MUL, DIV, S_THAN] and toks[idx+2] in [EQUALS, SUB]) or\
                     (t in self._vars_dict["GLOBALS"]["global_vars"].keys() and toks[idx+1] == EQUALS) or\
-                        (t in self._vars_dict["GLOBALS"]["global_vars"].keys() and toks[idx+1] in [ADD, SUB, MUL, DIV] and toks[idx+2] == EQUALS):
+                    (t in self._vars_dict["GLOBALS"]["global_vars"].keys() and toks[idx+1] in [ADD, SUB, MUL, DIV, S_THAN] and toks[idx+2] in [EQUALS, SUB]):
                     c_str += self.__reassign_vals(vars_dict,
                                                   toks, _global_call)
                     break
