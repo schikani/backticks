@@ -1,0 +1,25 @@
+let a[5] = [4.12, 5.65];
+let b[] = [5.62];
+let names[10] = [`Hello!!!`];
+for idx, v in names
+{
+    printl(`[{idx}] = {v}`);
+}
+
+
+< func(a[]: float, b[]: float): float[]
+{
+
+    return a;
+}
+
+@ f(): float[]
+{
+    return b;
+}
+let d = f();
+
+let c = func(a, b);
+printl(`{c[1]}`);
+
+printl(`{d[0]}`);

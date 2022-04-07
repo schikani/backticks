@@ -22,8 +22,12 @@ def new_list(_type, var, _list, _len=False, _func=False):
 
                 # str_to_ret += f"{var}[{_len}] = {{{_list[0]}}};\n"
         else:
-            for i in range(_list_len):
-                str_to_ret += new_str(f"{var}[{i}]", f"{_list[i]}")
+            if _list_len > 1:
+                for i in range(_list_len):
+                    str_to_ret += new_str(f"{var}[{i}]", f"{_list[i]}")
+            elif _list_len == 1:
+                str_to_ret += f'for (size_t i = 0; i < {_len}; ++i){{{new_str(f"{var}[i]", f"{_list[0]}")}}}\n'
+                
         return str_to_ret
 
     elif _len and _func:
