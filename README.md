@@ -21,6 +21,7 @@ loop until char_count < 30
     char_count += 1;
 }
 printl(`After:\t{line}`);
+```
 Output
 ```
 num1+num2 = 112.530000
