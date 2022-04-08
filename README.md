@@ -9,19 +9,18 @@
 let num1 = 45;
 let num2 = 67.53;
 
-printl(`num1+num2 = [num1+num2]`);
+printl(`num1+num2 = {num1+num2}`);
 
 let line = `*`;
 let char_count = 0;
 
-printl(`Before:\t[line]`);
+printl(`Before:\t{line}`);
 loop until char_count < 30 
 {
     line += `*`;
     char_count += 1;
 }
-printl(`After:\t[line]`);
-```
+printl(`After:\t{line}`);
 Output
 ```
 num1+num2 = 112.530000
@@ -50,7 +49,6 @@ extern _TEST_H_VARS test;
 
 #endif
 ```
-
 ### Source file
 ```C
 #include "test.h"
@@ -67,8 +65,7 @@ int main(int argc, char *argv[])
     printf("Before:\t%s\n", test.line);
     while (test.char_count < 30)
     {
-        test.line = realloc(test.line, (strlen(test.line) +\
-        strlen("*")) * sizeof(char));
+        test.line = realloc(test.line, (strlen(test.line) + strlen("*")) * sizeof(char));
         strcat(test.line, "*");
         test.char_count += 1;
     }
