@@ -15,6 +15,36 @@ def make_bt_inbuilts_header():
 #pragma GCC diagnostic ignored "-Wformat" 
 // #pragma GCC diagnostic ignored "-Wunknown-escape-sequence"
 
+typedef char * str;
+
+typedef struct
+{
+    bool *ptr;
+    bool *ptr_copy;
+    size_t len;
+} bool_list_t;
+
+typedef struct
+{
+    double *ptr;
+    double *ptr_copy;
+    size_t len;
+} double_list_t;
+
+typedef struct
+{
+    long *ptr;
+    long *ptr_copy;
+    size_t len;
+} long_list_t;
+
+typedef struct
+{
+    char **ptr;
+    char **ptr_copy;
+    size_t len;
+} str_list_t;
+
 char *_bt_input(FILE *in);
 
 #endif
@@ -25,7 +55,6 @@ char *_bt_input(FILE *in);
 
 def make_inbuilts_source():
     source = """#include "_bt_inbuilts_.h"
-
 char *_bt_input(FILE *in)
 {
     size_t alloc_length = 64;

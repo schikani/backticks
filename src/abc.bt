@@ -1,15 +1,3 @@
-let a[5] = [4.12, 5.65];
+let a[] = [12.5, 13.5, 15.6];
 
-< func(): float[]
-{
-    a[3] = 7777.00;
-    let b[] = [9.0];
-    return b;
-}
-
-let c = func();
-
-for idx, val in a
-{
-    printl(`c[{idx}] = {c[idx]}`);
-}
+printl(`{a[0]}`);

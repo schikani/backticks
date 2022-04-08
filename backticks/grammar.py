@@ -530,8 +530,8 @@ class BT_Grammar(Tokenizer):
         if toks[1] == S_THAN and toks[2] == SUB:
             _v, _t = self.__eval_assign_values(vars_dict, toks, _global_call, SEMI)
             # print(_v, _t)
-            if _t == STR:
-                _t = CHARSTAR
+            # if _t == STR:
+            #     _t = CHARSTAR
             _list_var, _vals = _v.split(SUB)
             _list_var = _list_var[:-1]
             _vals_list = _vals.split(COMA)
@@ -643,28 +643,21 @@ class BT_Grammar(Tokenizer):
         _type = ""
         _li_conts = ""
         _dynamic_list = False
-        _static_list = False
         _func_ret_list = False
-        _static_len = ""
-
-
-        if var.endswith("[]"):
-            var = var[:var.find(LEFTSQUARE)]
-            _dynamic_list = True
+        _list_len = ""
         
-        elif self.is_list(var):
-            _static_len = var[var.find(LEFTSQUARE)+1:var.find(RIGHTSQUARE)]
+        if self.is_list(var):
+            _list_len = var[var.find(LEFTSQUARE)+1:var.find(RIGHTSQUARE)]
             var = var[:var.find(LEFTSQUARE)]
-            _static_list = True
+            if not _list_len:
+                _dynamic_list = True
 
-        
         # Check if this function return a list
         if self._in_func_names(tok_list[2]):
             _f = self._in_func_names(tok_list[2])
             if self._vars_dict["FUNCS"][_f][0][2] == "__LIST__":
                 _func_ret_list = True
         
-        # print(tok_list[2])
 
         # Check if the variable is already defined
         if var not in vars_dict.keys():
@@ -676,12 +669,12 @@ class BT_Grammar(Tokenizer):
             if assign == EQUALS:
                 
                 # Case let 'a = nums[0]'
-                if not _dynamic_list and not _static_list and tok_list[2].endswith(RIGHTSQUARE):
+                if not _dynamic_list and tok_list[2].endswith(RIGHTSQUARE):
                     _li_conts = tok_list[2][tok_list[2].find(LEFTSQUARE)+1:tok_list[2].find(RIGHTSQUARE)]
                     tok_list[2] = tok_list[2][:tok_list[2].find(LEFTSQUARE)]
 
                 
-                # if not _dynamic_list and not _static_list and tok_list[2].endswith(RIGHTSQUARE):
+                # if not _dynamic_list and not _list_len and tok_list[2].endswith(RIGHTSQUARE):
 
 
                 if len(tok_list) > 1 and tok_list[2][0] == LEFTSQUARE and tok_list[2][-1] == RIGHTSQUARE:
@@ -726,11 +719,7 @@ class BT_Grammar(Tokenizer):
 
                 vars_dict[var].append(val)
                 vars_dict[var].append(_type)
-                if _dynamic_list:
-                    vars_dict[var].append("__LIST_DY__")
-                elif _static_list:
-                    vars_dict[var].append("__LIST_ST__")
-                elif _func_ret_list:
+                if _dynamic_list or _list_len or _func_ret_list:
                     vars_dict[var].append("__LIST__")
                 else:
                     # print(var)
@@ -762,69 +751,41 @@ class BT_Grammar(Tokenizer):
                 vars_dict[var].append(val)
                 vars_dict[var].append(_type)
 
-                if _dynamic_list:
-                    vars_dict[var].append("__LIST_DY__")
-                elif _static_list:
-                    vars_dict[var].append("__LIST_ST__")
+                if _dynamic_list or _list_len or _func_ret_list:
+                    vars_dict[var].append("__LIST__")
                 else:
                     vars_dict[var].append(False)
 
             
+
+            # if _type == STR:
+            #     _type = CHARSTAR
+
+
             # print(var, val, _type)
 
+            if _global_call and not _dynamic_list and not _list_len and not _func_ret_list:
+                self._global_vars_list.append(f"{_type} {var}")
 
-            if _type == STR:
-                _type = CHARSTAR
+            elif _global_call and _dynamic_list:
+                self._global_vars_list.append(f"{_type}_list_t *{var}")
 
             if _global_call:
-                if not _dynamic_list and not _static_list and not _func_ret_list:
-                    self._global_vars_list.append(f"{_type} {var}")
-                else:
-                    if _dynamic_list:
-                        self._global_vars_list.append(f"{_type} *{var}")
-                        self._global_vars_list.append(f"{_type} *{var}_copy")
+                var = self.bin_name + DOT + var
 
-                    elif _static_list:
-                        self._global_vars_list.append(f"{_type} {var}[{_static_len}]")
-                    
-                    elif _func_ret_list:
-                        self._global_vars_list.append(f"{_type} *{var}")
-
-                    self._global_vars_list.append(f"size_t {var}_len")
-
-                if _type == CHARSTAR and not _dynamic_list and not _static_list:
-                    return new_str(self.bin_name+DOT+var, val)
-                
-                elif _dynamic_list:
-                    return new_list(_type, self.bin_name+DOT+var,\
-                         val.replace(LEFTSQUARE, "").\
-                            replace(RIGHTSQUARE, "").split(COMA))
-                
-                elif _static_list:
-                    return new_list(_type, self.bin_name+DOT+var,\
-                         val.replace(LEFTSQUARE, "").\
-                            replace(RIGHTSQUARE, "").split(COMA), _static_len) 
-                else:
-                    if not _li_conts:
-                        _r = ""
-                        # if _func_ret_list:
-                        #     _r = f"{self.bin_name}.{var}_len = sizeof({self.bin_name}.{var})/sizeof({self.bin_name}.{var}[0])+1;\n"
-
-                        return f"{self.bin_name}.{var} = {val};\n" + _r
-                    else:
-                        return f"{self.bin_name}.{var} = {val}{_li_conts};\n"
-
+            if _type == STR and not _dynamic_list and not _list_len:
+                return new_str(var, val)
+            
+            elif _dynamic_list:
+                # print(_type, var, val)
+                return new_list(_type, var, val.replace(LEFTSQUARE, "").replace(RIGHTSQUARE, "").split(COMA))
+            
             else:
-                if _type == CHARSTAR and not _dynamic_list and not _static_list:
-                    return CHARSTAR + new_str(var, val)
-                elif _dynamic_list:
-                    return new_list(_type, var,\
-                         val.replace(LEFTSQUARE, "").\
-                            replace(RIGHTSQUARE, "").split(COMA), _func=True)
                 if not _li_conts:
-                    return f"{_type} {var} = {val};\n"
+                    return f"{var} = {val};\n"
                 else:
-                    return f"{_type} {var} = {val}[{_li_conts}];\n"
+                    return f"{var} = {val}{_li_conts};\n"
+
 
 
     def __print(self, vars_dict, tok_list, _global_call, newline):
@@ -1117,8 +1078,8 @@ class BT_Grammar(Tokenizer):
 
                     self._vars_dict["FUNCS"][current_func][1][var] = (val, _type, _sub_t)
 
-                    if _type == STR:
-                        _type = CHARSTAR
+                    # if _type == STR:
+                    #     _type = CHARSTAR
 
                     if _sub_t == "__LIST__":
                         c_func_params += f"{_type} *{var}"
@@ -1167,10 +1128,10 @@ class BT_Grammar(Tokenizer):
                     start += 1
             
             if return_type == STR and _sub_type != "__LIST__":
-                return_type = CHARSTAR
+                pass
             
             elif return_type == STR and _sub_type == "__LIST__":
-                return_type = CHARSTAR + "*"
+                return_type = STR + "*"
             
             elif _sub_type == "__LIST__":
                 return_type += "*"
@@ -1393,8 +1354,8 @@ class BT_Grammar(Tokenizer):
                 start += 1
             
 
-        if _type == STR:
-            _type = CHARSTAR
+        # if _type == STR:
+        #     _type = CHARSTAR
             
         str_to_ret += access_elem_by_ref(_type, _k, _v, val, for_body, _start, _end)
 

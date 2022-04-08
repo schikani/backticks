@@ -10,51 +10,35 @@ def new_list(_type, var, _list, _len=False, _func=False):
     _li = _li.replace(LEFTSQUARE, LEFTCURL)
     _li = _li.replace(RIGHTSQUARE, RIGHTCURL)
 
-    if _len and not _func:
-        str_to_ret += f"{var}_len = {_len};\n"
+    # if _type == CHARSTAR:
+    #     _type = "str"
 
-        if _type != CHARSTAR:
-            if _list_len > 1:
-                for i in range(_list_len):
-                    str_to_ret += f"{var}[{i}] = {_list[i]};\n"
-            elif _list_len == 1:
-                str_to_ret += f"for (size_t i = 0; i < {_len}; ++i){var}[i] = {_list[0]};\n"
+    if not _len:
+        _len = _list_len
 
-                # str_to_ret += f"{var}[{_len}] = {{{_list[0]}}};\n"
-        else:
-            if _list_len > 1:
-                for i in range(_list_len):
-                    str_to_ret += new_str(f"{var}[{i}]", f"{_list[i]}")
-            elif _list_len == 1:
-                str_to_ret += f'for (size_t i = 0; i < {_len}; ++i) {{{new_str(f"{var}[i]", f"{_list[0]}")}}}\n'
-                
-        return str_to_ret
+    str_to_ret += f"""{_type + '_list_t * ' if _func else ""}{var} = ({_type}_list_t *)calloc(1, sizeof({_type}_list_t));
+{var}->len = {_len};
+{var}->ptr = calloc({_len}, sizeof({_type}));
+{var}->ptr_copy = {var}->ptr;
+"""
 
-    elif _len and _func:
-        str_to_ret += f"size_t {var}_len = {_len};\n"
-        str_to_ret += f"{_type} {var}[{_len}] = {_li};\n"
-        return str_to_ret
+    if _type != STR:
+        if _list_len > 1:
+            for i in range(_list_len):
+                str_to_ret += f"{var}->ptr[{i}] = {_list[i]};\n"
+        elif _list_len == 1:
+            str_to_ret += f"for (size_t i = 0; i < {_len}; ++i){var}->ptr[i] = {_list[0]};\n"
 
     else:
-        if not _func:
-            str_to_ret += f"{var} = ({_type} *)calloc({_list_len}, sizeof({_type}));\n"
-            str_to_ret += f"{var}_copy = {var};\n"
-            str_to_ret += f"{var}_len = {_list_len};\n"
-        else:
-            str_to_ret += f"{_type} *{var} = ({_type} *)calloc({_list_len}, sizeof({_type}));\n"
-            str_to_ret += f"{_type} *{var}_copy = {var};\n"
-            str_to_ret += f"size_t {var}_len = {_list_len};\n"
-
-        if _type != CHARSTAR:    
+        if _list_len > 1:
             for i in range(_list_len):
-                str_to_ret += f"{var}[{i}] = {_list[i]};\n"
-        else:
-            for i in range(_list_len):
-                str_to_ret += new_str(f"{var}[{i}]", f"{_list[i]}")
-                # str_to_ret += f"{var}[{i}] = {_list[i]};\n"
+                str_to_ret += new_str(f"{var}->ptr[{i}]", f"{_list[i]}")
+        elif _list_len == 1:
+            str_to_ret += f'for (size_t i = 0; i < {_len}; ++i) {{{new_str(f"{var}->ptr[i]", f"{_list[0]}")}}}\n'
+                
+    return str_to_ret
 
-        return str_to_ret
-
+        
 def append_list(_type, var, vals_list):
     str_to_ret = ""
     _list_len = len(vals_list)
