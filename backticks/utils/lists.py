@@ -26,7 +26,7 @@ def new_list(_type, var, _list, _len=False, _func=False):
                 for i in range(_list_len):
                     str_to_ret += new_str(f"{var}[{i}]", f"{_list[i]}")
             elif _list_len == 1:
-                str_to_ret += f'for (size_t i = 0; i < {_len}; ++i){{{new_str(f"{var}[i]", f"{_list[0]}")}}}\n'
+                str_to_ret += f'for (size_t i = 0; i < {_len}; ++i) {{{new_str(f"{var}[i]", f"{_list[0]}")}}}\n'
                 
         return str_to_ret
 
@@ -83,11 +83,7 @@ def access_elem_by_ref(_type, _k, _v, _list_name, for_body, _start=None, _end=No
     if not _end:
         _end = f"{_list_name}_len"
 
-    str_to_ret = f"""for (size_t {_k} = {_start}; {_k} < {_end}; ++{_k})
-{{
-{_type} {_v} = {_list_name}[{_k}];
-{for_body}
-    
-}}"""
+    str_to_ret = f"""for (size_t {_k} = {_start}; {_k} < {_end}; ++{_k}) {{{_type} {_v} = {_list_name}[{_k}];
+{for_body}}}\n"""
 
     return str_to_ret
