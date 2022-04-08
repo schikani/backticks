@@ -8,26 +8,26 @@ Usage of let with printl
 ---------------------------------
 #/ -> Multi-line comment end
 
-printl(`\n~~~~~~~~~~~~~~~~~~[index]~~~~~~~~~~~~~~~~~`);
+printl(`\n~~~~~~~~~~~~~~~~~~{index}~~~~~~~~~~~~~~~~~`);
 
 let num1 = 30;
 let num2 = 31.5;
 let num3: int;
 let num4: float;
 
-printl(`num1 = [num1]`);
-printl(`num2 = [num2]`);
+printl(`num1 = {num1}`);
+printl(`num2 = {num2}`);
 
 num3 = num1 + 1;
 num4 = num2;
 
-printl(`num3 = [num3]`);
-printl(`num4 = [num4]`);
+printl(`num3 = {num3}`);
+printl(`num4 = {num4}`);
 
 let num5 = num1 + num2;
 
 num5 += 1;
-printl(`num5 = [num5]`);
+printl(`num5 = {num5}`);
 
 index += 1;
 
@@ -38,7 +38,7 @@ index += 1;
 Usage of operators with numbers
 --------------------------------
 #/
-printl(`\n~~~~~~~~~~~~~~~~~~[index]~~~~~~~~~~~~~~~~~`);
+printl(`\n~~~~~~~~~~~~~~~~~~{index}~~~~~~~~~~~~~~~~~`);
 
 if num1 == 20 {printl(`FOUND 20`);}
 elif num1 == 30 {printl(`FOUND 30`);}
@@ -55,14 +55,14 @@ index += 1;
 Usage of strings with printl
 -----------------------------
 #/
-printl(`\n~~~~~~~~~~~~~~~~~~[index]~~~~~~~~~~~~~~~~~`);
+printl(`\n~~~~~~~~~~~~~~~~~~{index}~~~~~~~~~~~~~~~~~`);
 
 let name = `John`;
-printl(`Name: [name]`);
+printl(`Name: {name}`);
 
 # Concat strings using '+=' operator
 name += ` Wick`;
-printl(`Fullname: [name]`);
+printl(`Fullname: {name}`);
 
 index += 1;
 
@@ -73,13 +73,13 @@ index += 1;
 Usage of `==` operator with strings
 --------------------------------------
 #/
-printl(`\n~~~~~~~~~~~~~~~~~~[index]~~~~~~~~~~~~~~~~~`);
+printl(`\n~~~~~~~~~~~~~~~~~~{index}~~~~~~~~~~~~~~~~~`);
 
 let person1 = `Will Smith`;
 let person2 = `John Wick`;
 
-if name == person1 {printl(`FOUND [person1]`);}
-elif name == person2 {printl(`FOUND [person2]`);}
+if name == person1 {printl(`FOUND {person1}`);}
+elif name == person2 {printl(`FOUND {person2}`);}
 
 index += 1;
 
@@ -95,13 +95,13 @@ Usage of private and public functions
 (available from another file)
 --------------------------------------
 #/
-printl(`\n~~~~~~~~~~~~~~~~~~[index]~~~~~~~~~~~~~~~~~`);
+printl(`\n~~~~~~~~~~~~~~~~~~{index}~~~~~~~~~~~~~~~~~`);
 
 @ calc(num1: int, num2: int): float
 {
     return num1 + num2 / 100.0;
 }
-printl(`calc(1, 2) = [calc(1, 2)]`);
+printl(`calc(1, 2) = {calc(1, 2)}`);
 
 @ swap_global_vars()
 {
@@ -115,10 +115,10 @@ printl(`calc(1, 2) = [calc(1, 2)]`);
     return 658.0;
 }
 
-printl(`Before swap: num1 = [num1] | num3 = [num3]`);
+printl(`Before swap: num1 = {num1} | num3 = {num3}`);
 swap_global_vars();
-printl(`After swap: num1 = [num1] | num3 = [num3]`);
-printl(`some_float() = [some_float()]`);
+printl(`After swap: num1 = {num1} | num3 = {num3}`);
+printl(`some_float() = {some_float()}`);
 
 index += 1;
 
@@ -126,15 +126,15 @@ index += 1;
 /#
 ---------------------------------------------------
                         6
-Usage of printl and let with complex values in `[]`
+Usage of printl and let with complex values in `{}`
 ---------------------------------------------------
 #/
-printl(`\n~~~~~~~~~~~~~~~~~~[index]~~~~~~~~~~~~~~~~~`);
+printl(`\n~~~~~~~~~~~~~~~~~~{index}~~~~~~~~~~~~~~~~~`);
 
 
-printl(`12+10+90/some_float() = [12+10+90/some_float()]`);
+printl(`12+10+90/some_float() = {12+10+90/some_float()}`);
 let eval_val = 12+10+90/some_float();
-printl(`eval_val = [eval_val]`);
+printl(`eval_val = {eval_val}`);
 
 index += 1;
 
@@ -145,13 +145,13 @@ index += 1;
 Usage of loop, loop until and sleep, usleep methods
 ---------------------------------------------------
 #/
-printl(`\n~~~~~~~~~~~~~~~~~~[index]~~~~~~~~~~~~~~~~~`);
+printl(`\n~~~~~~~~~~~~~~~~~~{index}~~~~~~~~~~~~~~~~~`);
 
 let count = 3;
 loop
 {
     if count == 0 {break;}
-    printl(`[count]`);
+    printl(`{count}`);
     count -= 1;
     sleep(1);
 }
@@ -186,7 +186,7 @@ loop
         loop until count < 3
         {
             count += 1;
-            printl(`[count]`);
+            printl(`{count}`);
         }
     }
 }

@@ -4,27 +4,27 @@ let count = 11;
 
 < loop_example(dur_ns: int):
 {
-    printl(`    ~~ [file_name] loop_example ~~`);
+    printl(`    ~~ {file_name} loop_example ~~`);
     loop
     {
         count -= 1;
         if count == -1 {break;}
-        if count == 0 {printl(`\t[file_name].count = [count] <--- END`);}
-        elif count != 5 {printl(`\t[file_name].count = [count]`);}
-        else {printl(`\t[file_name].count = [count] <--- Center`);}
+        if count == 0 {printl(`\t{file_name}.count = {count} <--- END`);}
+        elif count != 5 {printl(`\t{file_name}.count = {count}`);}
+        else {printl(`\t{file_name}.count = {count} <--- Center`);}
         usleep(dur_ns);
     }
 }
 
 < loop_until_example(dur_ns: int):
 {
-    printl(`    ~~ [file_name] loop_until_example ~~`);
+    printl(`    ~~ {file_name} loop_until_example ~~`);
     count = 0;
     loop until count <= 10
     {
-        if count == 10 {printl(`\t[file_name].count = [count] <--- END`);}
-        elif count != 5 {printl(`\t[file_name].count = [count]`);}
-        else {printl(`\t[file_name].count = [count] <--- Center`);}
+        if count == 10 {printl(`\t{file_name}.count = {count} <--- END`);}
+        elif count != 5 {printl(`\t{file_name}.count = {count}`);}
+        else {printl(`\t{file_name}.count = {count} <--- Center`);}
         count += 1;
         
         usleep(dur_ns);

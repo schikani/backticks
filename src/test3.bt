@@ -8,4 +8,4 @@ if a
     printl(`a = True`);
 }
 
-printl(`b = [b]`);
+printl(`b = {b}`);
