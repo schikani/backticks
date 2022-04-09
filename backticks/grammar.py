@@ -1,3 +1,4 @@
+from traceback import print_list
 from ._tokens import *
 from .tokenizer import Tokenizer
 from .c_templates import *
@@ -14,7 +15,7 @@ class BT_Grammar(Tokenizer):
         self._public_func_list = []
         self._funcs_impl = []
         self._includes = []
-        self._includes.append('#include "_bt_inbuilts_.h"')
+        self._includes.append('#include "_bt_builtins_.h"')
 
         '''
                       GLOBAL VARIABLES
@@ -60,6 +61,7 @@ class BT_Grammar(Tokenizer):
         int_found = False
         val = ""
         _type = ""
+        _type_suffix = ""
         _sub_type = ""
         _val_idx = 0
 
@@ -79,7 +81,7 @@ class BT_Grammar(Tokenizer):
         while tok_list[_val_idx] != _del:
 
             v = tok_list[_val_idx]
-
+            
 
             if self._in_func_names(v):
                 v = self._in_func_names(v)
@@ -99,7 +101,6 @@ class BT_Grammar(Tokenizer):
                         
                         elif self.is_bool(v):
                             bool_found = True
-
 
                     str1 = ""
                     str1_params = ""
@@ -314,7 +315,6 @@ class BT_Grammar(Tokenizer):
                                 val += v
 
                             else:
-                                
                                 vl = v.split(DOT)
                                 if vl[0] in self._imports_dict:
                                     val += self._imports_dict[vl[0]] + DOT + vl[1]
@@ -324,9 +324,13 @@ class BT_Grammar(Tokenizer):
                             val += v
 
                         str_found = True
+                        # if vars_dict[v][2] == "__LIST__":
+                        #     _type_suffix = "_list_t"
+                        
+                            # print(_type)
 
                     elif self.is_string(v, self._vars_dict["GLOBALS"]["global_vars"]):
-
+                        
                         if v.find(DOT) == -1 and self._vars_dict["GLOBALS"]["global_vars"][v][2] != "__FOR__":
                             val += self.bin_name + DOT + v
 
@@ -339,6 +343,8 @@ class BT_Grammar(Tokenizer):
                             if vl[0] in self._imports_dict:
                                 val += self._imports_dict[vl[0]] + DOT + vl[1]
                         
+                        if self._vars_dict["GLOBALS"]["global_vars"][v][2] == "__LIST__":
+                            _type_suffix = "_list_t"
                         str_found = True
 
 
@@ -351,8 +357,10 @@ class BT_Grammar(Tokenizer):
                             if vl[0] in self._imports_dict:
                                 val += vl[1] + "_" + self._imports_dict[vl[0]]
 
-                        str_found = True
+                        if self._vars_dict["FUNCS"][v][0][2] == "__LIST__":
+                            _type_suffix = "_list_t"
 
+                        str_found = True
 
                     else:
                         # print(v)
@@ -379,64 +387,67 @@ class BT_Grammar(Tokenizer):
                 elif v == OR:
                     val += " || "
 
+            # 1. Check for function variable name or
+            # 2. Check for global scope
             elif v in vars_dict.keys() or v in self._vars_dict["FUNCS"].keys():
-                # Check for function variable name
-                # If it is in global scope or function scope
-                if v in vars_dict.keys():
-                    if vars_dict[v][2]:
-                        _sub_type = vars_dict[v][2]
-                        # print(v, _sub_type)
+                # print(v)
+                if v in vars_dict.keys():  
 
-                    if vars_dict[v][1] == BOOL:
+                    _ret_type =vars_dict[v][1]
+
+                    if _ret_type.endswith("_list_t"):
+                        _ret_type = _ret_type[:_ret_type.find("_list_t")]
+                        _type_suffix = "_list_t"
+
+                    if _ret_type == BOOL:
                         bool_found = True
 
-                    elif vars_dict[v][1] == DOUBLE:
+                    elif _ret_type == DOUBLE:
                         float_found = True
 
-                    elif vars_dict[v][1] == LONG:
+                    elif _ret_type == LONG:
                         int_found = True
 
-                    elif vars_dict[v][1] == STR:
+                    elif _ret_type == STR:
                         str_found = True
                     
-                    # elif vars_dict[v][1] == CONST
 
                     if _global_call:
-                        if not str_found:
-                            if v.find(DOT) == -1 and vars_dict[v][2] != "__FOR__":
-                                val += self.bin_name + DOT + v
+                        # if not str_found:
+                        if v.find(DOT) == -1 and vars_dict[v][2] != "__FOR__":
+                            val += self.bin_name + DOT + v
 
-                            elif v.find(DOT) == -1 and vars_dict[v][2] == "__FOR__":
-                                val += v
+                        elif v.find(DOT) == -1 and vars_dict[v][2] == "__FOR__":
+                            val += v
 
-                            else:
-                                vl = v.split(DOT)
-                                if vl[0] in self._imports_dict:
-                                    val += self._imports_dict[vl[0]] + DOT + vl[1]
+                        else:
+                            vl = v.split(DOT)
+                            if vl[0] in self._imports_dict:
+                                val += self._imports_dict[vl[0]] + DOT + vl[1]
 
                     else:
-                        # print(v)
                         if not str_found:
                             val += v
 
                 # Check for function name
                 elif v in self._vars_dict["FUNCS"].keys():
-                    # print(v, self._vars_dict["FUNCS"][v][0][2])    
 
-                    if self._vars_dict["FUNCS"][v][0][2]:
-                        _sub_type = self._vars_dict["FUNCS"][v][0][2]
-                        # print(_sub_type)
+                    _func_ret_type = self._vars_dict["FUNCS"][v][0][1]
 
-                    if self._vars_dict["FUNCS"][v][0][1] == BOOL:
+                    if _func_ret_type.endswith("_list_t"):
+                        _func_ret_type = _func_ret_type[:_func_ret_type.find("_list_t")]
+                        _type_suffix = "_list_t"
+
+                    if _func_ret_type == BOOL:
                         bool_found = True
 
-                    elif self._vars_dict["FUNCS"][v][0][1] == DOUBLE:
+                    elif _func_ret_type == DOUBLE:
                         float_found = True
 
-                    elif self._vars_dict["FUNCS"][v][0][1] == LONG:
+                    elif _func_ret_type == LONG:
                         int_found = True
 
-                    elif self._vars_dict["FUNCS"][v][0][1] == STR:
+                    elif _func_ret_type == STR:
                         str_found = True
 
                     if v.find(DOT) == -1:
@@ -451,10 +462,6 @@ class BT_Grammar(Tokenizer):
 
             elif v in self._vars_dict["GLOBALS"]["global_vars"].keys():
                 # print(v)
-
-                if self._vars_dict["GLOBALS"]["global_vars"][v][2]:
-                    _sub_type = self._vars_dict["GLOBALS"]["global_vars"][v][2]
-                    # print(_sub_type)
 
                 if self._vars_dict["GLOBALS"]["global_vars"][v][1] == BOOL:
                     bool_found = True
@@ -477,7 +484,7 @@ class BT_Grammar(Tokenizer):
                             val += self._imports_dict[vl[0]] + DOT + vl[1]
 
                     # val += self.bin_name + DOT + v
-
+            
             elif self.is_bool(v):
                 val += v
                 bool_found = True
@@ -491,7 +498,6 @@ class BT_Grammar(Tokenizer):
 
             _val_idx += 1
         
-        # print(v)
 
         if str_found:
             _type = STR
@@ -506,21 +512,21 @@ class BT_Grammar(Tokenizer):
             _type = LONG
         
         
+        # print(_type_suffix)
         # print(val, _type)
 
-        return (val, _type)
+        return (val, _type+_type_suffix)
 
     def __reassign_vals(self, vars_dict, toks, _global_call):
 
         # t = toks[0]
         # print(toks)
-        _list_conts = ""
+        _list_count = ""
         str_to_ret = ""
 
         if self.is_list(toks[0]):
             _t = toks[0][:toks[0].find(LEFTSQUARE)]
-            _list_conts = toks[0][toks[0].find(LEFTSQUARE):]
-
+            _list_count = toks[0][toks[0].find(LEFTSQUARE):]
             toks[0] = _t
 
 
@@ -529,15 +535,12 @@ class BT_Grammar(Tokenizer):
         # List append condition 'a <- 45, 55'
         if toks[1] == S_THAN and toks[2] == SUB:
             _v, _t = self.__eval_assign_values(vars_dict, toks, _global_call, SEMI)
-            # print(_v, _t)
-            # if _t == STR:
-            #     _t = CHARSTAR
+
             _list_var, _vals = _v.split(SUB)
             _list_var = _list_var[:-1]
             _vals_list = _vals.split(COMA)
-            # print(_list_var, _vals_list)
             str_to_ret += append_list(_t, _list_var, _vals_list)
-            # print(str_to_ret)
+        
 
 
         # Check for '+=', '-=', '*=', '\=' condition
@@ -566,10 +569,20 @@ class BT_Grammar(Tokenizer):
 
             val, _type = self.__eval_assign_values(
                 vars_dict, toks[2:toks.index(SEMI)+1], _global_call, SEMI)
-        
+
+            # v1 = v2
+            if self.is_list(val):
+                new_val = val.split(LEFTSQUARE)
+                _v2, _t2 = self.__eval_assign_values(vars_dict, [new_val[0], SEMI], _global_call, SEMI)
+                # print(_v2, _t2)
+                _v2 += "->ptr" + "[" + new_val[1]
+                # print(_v2)
+                val = _v2
+
+        # print(t, _list_count)
 
         if not _global_call and t in vars_dict.keys():
-            t += _list_conts
+            t += _list_count
             # String or Number
             if toks[1] == ADD and toks[2] == EQUALS:
                 if _type == STR:
@@ -592,9 +605,13 @@ class BT_Grammar(Tokenizer):
                     str_to_ret += t + EQUALS + val + SEMI + NEWLINE
 
         elif _global_call or t in self._vars_dict["GLOBALS"]["global_vars"] or t in self._vars_dict["FUNCS"]:
-            t += _list_conts
+            
+            if t in self._vars_dict["GLOBALS"]["global_vars"]:
+                if self._vars_dict["GLOBALS"]["global_vars"][t][2] == "__LIST__":
+                    t += "->ptr" + _list_count
 
-            # print(t)
+                # print(t)
+
             if t.find(DOT) == -1:                
                 t = self.bin_name + DOT + t
 
@@ -605,6 +622,11 @@ class BT_Grammar(Tokenizer):
                 # Write correct file name from alias `t3.count = test3.count`
                 if t in self._vars_dict["GLOBALS"]["global_vars"]:
                     t = self._imports_dict[tl[0]] + DOT + tl[1]
+            
+            # print(t)
+            
+            # if _list_count:
+            #     t += "->ptr"+_list_count
 
             # String or Number
             if toks[1] == ADD and toks[2] == EQUALS:
@@ -641,22 +663,24 @@ class BT_Grammar(Tokenizer):
         var = tok_list[0]
         val = ""
         _type = ""
-        _li_conts = ""
+        _li_assign_idx = ""
         _dynamic_list = False
         _func_ret_list = False
         _list_len = ""
+        _sub_type = ""
         
         if self.is_list(var):
             _list_len = var[var.find(LEFTSQUARE)+1:var.find(RIGHTSQUARE)]
             var = var[:var.find(LEFTSQUARE)]
-            if not _list_len:
-                _dynamic_list = True
-
+            # if not _list_len:
+            _dynamic_list = True
+        
         # Check if this function return a list
         if self._in_func_names(tok_list[2]):
             _f = self._in_func_names(tok_list[2])
             if self._vars_dict["FUNCS"][_f][0][2] == "__LIST__":
-                _func_ret_list = True
+                # list_type
+                _func_ret_list = self._vars_dict["FUNCS"][_f][0][1]
         
 
         # Check if the variable is already defined
@@ -669,9 +693,10 @@ class BT_Grammar(Tokenizer):
             if assign == EQUALS:
                 
                 # Case let 'a = nums[0]'
-                if not _dynamic_list and tok_list[2].endswith(RIGHTSQUARE):
-                    _li_conts = tok_list[2][tok_list[2].find(LEFTSQUARE)+1:tok_list[2].find(RIGHTSQUARE)]
+                if not _dynamic_list and self.is_list(tok_list[2]):
+                    _li_assign_idx = tok_list[2][tok_list[2].find(LEFTSQUARE)+1:tok_list[2].find(RIGHTSQUARE)]
                     tok_list[2] = tok_list[2][:tok_list[2].find(LEFTSQUARE)]
+
 
                 
                 # if not _dynamic_list and not _list_len and tok_list[2].endswith(RIGHTSQUARE):
@@ -713,14 +738,15 @@ class BT_Grammar(Tokenizer):
 
                     # print(val, _type)
                     
-                if _li_conts:
-                    val += "[" + _li_conts + "]"
+                if _li_assign_idx:
+                    val += "->ptr[" + _li_assign_idx + "]"
 
 
                 vars_dict[var].append(val)
                 vars_dict[var].append(_type)
                 if _dynamic_list or _list_len or _func_ret_list:
                     vars_dict[var].append("__LIST__")
+                    # _type += ""
                 else:
                     # print(var)
                     vars_dict[var].append(False)
@@ -769,22 +795,34 @@ class BT_Grammar(Tokenizer):
 
             elif _global_call and _dynamic_list:
                 self._global_vars_list.append(f"{_type}_list_t *{var}")
+            
+            elif _global_call and _func_ret_list:
+                self._global_vars_list.append(f"{_func_ret_list} *{var}")
+            
+            elif _global_call:
+                self._global_vars_list.append(f"{_type} {var}")
+
 
             if _global_call:
-                var = self.bin_name + DOT + var
+                var = self.bin_name + DOT + var + _sub_type
 
             if _type == STR and not _dynamic_list and not _list_len:
                 return new_str(var, val)
-            
+
             elif _dynamic_list:
-                # print(_type, var, val)
-                return new_list(_type, var, val.replace(LEFTSQUARE, "").replace(RIGHTSQUARE, "").split(COMA))
+                if _global_call:
+                    # print(_type, var, val)
+                    return new_list(_type, var, val.replace(LEFTSQUARE, "").replace(RIGHTSQUARE, "").split(COMA), _len=_list_len)
+                else:
+                    # print(_type, var, val)
+                    return new_list(_type, var, val.replace(LEFTSQUARE, "").replace(RIGHTSQUARE, "").split(COMA), _len=_list_len, _func=True)
             
             else:
-                if not _li_conts:
+                if _global_call:
                     return f"{var} = {val};\n"
                 else:
-                    return f"{var} = {val}{_li_conts};\n"
+                    return f"{_type} {var} = {val};\n"
+
 
 
 
@@ -1013,6 +1051,7 @@ class BT_Grammar(Tokenizer):
     def __func(self, current_func, toks):
 
         c_func_params = ""
+        return_list = False
 
         current_func += "_" + self.bin_name
 
@@ -1037,6 +1076,7 @@ class BT_Grammar(Tokenizer):
             if return_type.endswith("[]"):
                 return_type = return_type[:return_type.find(LEFTSQUARE)]
                 _sub_type = "__LIST__"
+                return_list = True
 
             if return_type == INT:
                 return_type = LONG
@@ -1049,12 +1089,16 @@ class BT_Grammar(Tokenizer):
             elif return_type == STR:
                 ret_val = ""
 
+            if return_list:
+                return_type += "_list_t"
+
             # func_type can be `@` or `<`
             self._vars_dict["FUNCS"][current_func][0] = [ret_val, return_type, _sub_type, func_type]
 
             if params and params[0] != ":":
                 # Extract param vars and types and skip if no params
                 _idx = 0
+                param_list = False
                 while (_idx < len(params)):
                     var = params[_idx]
                     _type = params[_idx+2]
@@ -1064,6 +1108,7 @@ class BT_Grammar(Tokenizer):
                     if var.endswith("[]"):
                         var = var[:var.find(LEFTSQUARE)]
                         _sub_t = "__LIST__"
+                        param_list = True
 
                     if _type == INT:
                         _type = LONG
@@ -1075,6 +1120,10 @@ class BT_Grammar(Tokenizer):
 
                     elif _type == STR:
                         val = ""
+                    
+                    if param_list:
+                        param_list = False
+                        _type += "_list_t"
 
                     self._vars_dict["FUNCS"][current_func][1][var] = (val, _type, _sub_t)
 
@@ -1126,6 +1175,8 @@ class BT_Grammar(Tokenizer):
                     sub_toks.clear()
 
                     start += 1
+            
+            # print(return_type)
             
             if return_type == STR and _sub_type != "__LIST__":
                 pass
@@ -1207,17 +1258,12 @@ class BT_Grammar(Tokenizer):
                         if LEFTSQUARE in var and RIGHTSQUARE in var:
                             _li_conts = var[var.find(LEFTSQUARE)+1:var.find(RIGHTSQUARE)]
                             _v, t = self.__eval_assign_values(vars_dict, [_li_conts, SEMI], _global_call, SEMI)
-                            _li_conts = LEFTSQUARE + _v + RIGHTSQUARE
-
+                            _li_conts = "->ptr" + LEFTSQUARE + _v + RIGHTSQUARE
                         var = var[:var.find(LEFTSQUARE)]
-                    
-                    # print(var)
                     
                     var_list = [var, ()]
                     val, _type = self.__eval_assign_values(
                         vars_dict, var_list, _global_call, SEMI)
-
-                    # print(val, _type)
 
                     # if _type.endswith("__LIST__"):
                     #     _type = _type[:_type.find("__LIST__")]
@@ -1228,8 +1274,11 @@ class BT_Grammar(Tokenizer):
                     # elif _type.endswith("__LIST_ST__"):
                     #     _type = _type[:_type.find("__LIST_ST__")] 
 
-                    # print(val, _type)
                     # Type
+                    if _type.endswith("_list_t"):
+                        _type = _type[:_type.find("_list_t")]
+                    
+
                     if _type == LONG:
                         if val.find(SUB) != -1:
                             frmt += "%d"                         
@@ -1300,20 +1349,22 @@ class BT_Grammar(Tokenizer):
             if _v_.find(COLON) != -1:
                 _start, _end = _v_.split(COLON)
             
-        
         val, _type = self.__eval_assign_values(vars_dict, [_obj, ()], _global_call, SEMI)
 
-        # print(val, _type)
+        if not _type or vars_dict[_obj][1].endswith("_list_t"):
+            _type = vars_dict[_obj][1][:vars_dict[_obj][1].find("_list_t")]
 
+        # print(val, _type)
         if _end:
             if _end.startswith(SUB):
-                _end = val + "_len" +_end
+                _end = val + "->len" +_end
                 
         if _start:
             if _start.startswith(SUB):
-                _start = val+"_len" + _start
+                _start = val+"->len" + _start
 
         vars_dict.update({_v: [_v, _type, "__FOR__"]})
+        # print(_type)
 
         for_body = ""
 
@@ -1356,7 +1407,6 @@ class BT_Grammar(Tokenizer):
 
         # if _type == STR:
         #     _type = CHARSTAR
-            
         str_to_ret += access_elem_by_ref(_type, _k, _v, val, for_body, _start, _end)
 
         return str_to_ret

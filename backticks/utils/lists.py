@@ -16,7 +16,7 @@ def new_list(_type, var, _list, _len=False, _func=False):
     if not _len:
         _len = _list_len
 
-    str_to_ret += f"""{_type + '_list_t * ' if _func else ""}{var} = ({_type}_list_t *)calloc(1, sizeof({_type}_list_t));
+    str_to_ret += f"""{_type + '_list_t *' if _func else ""}{var} = ({_type}_list_t *)calloc(1, sizeof({_type}_list_t));
 {var}->len = {_len};
 {var}->ptr = calloc({_len}, sizeof({_type}));
 {var}->ptr_copy = {var}->ptr;
@@ -43,19 +43,19 @@ def append_list(_type, var, vals_list):
     str_to_ret = ""
     _list_len = len(vals_list)
 
-    str_to_ret += f"{var} = ({_type} *)realloc({var}, ({var}_len+{_list_len}) * sizeof({_type}));\n"
+    str_to_ret += f"{var}->ptr = realloc({var}->ptr, ({var}->len+{_list_len}) * sizeof({_type}));\n"
 
-    str_to_ret += f'if({var}==NULL){{printf("Memory allocation failed\\n");exit(1);}}\n'
+    str_to_ret += f'if({var}->ptr==NULL){{printf("Memory allocation failed\\n");exit(1);}}\n'
     
 
-    if _type != CHARSTAR:
+    if _type != STR:
         for i in range(_list_len):
-            str_to_ret += f"{var}[{var}_len+{i}] = {vals_list[i]};\n"
+            str_to_ret += f"{var}->ptr[{var}->len+{i}] = {vals_list[i]};\n"
     else:
         for i in range(_list_len):
-            str_to_ret += new_str(f"{var}[{var}_len+{i}]", f"{vals_list[i]}")
+            str_to_ret += new_str(f"{var}->ptr[{var}->len+{i}]", f"{vals_list[i]}")
 
-    str_to_ret += f"{var}_len += {_list_len};\n"
+    str_to_ret += f"{var}->len += {_list_len};\n"
 
     return str_to_ret
 
@@ -65,9 +65,9 @@ def access_elem_by_ref(_type, _k, _v, _list_name, for_body, _start=None, _end=No
         _start = 0
 
     if not _end:
-        _end = f"{_list_name}_len"
+        _end = f"{_list_name}->len"
 
-    str_to_ret = f"""for (size_t {_k} = {_start}; {_k} < {_end}; ++{_k}) {{{_type} {_v} = {_list_name}[{_k}];
+    str_to_ret = f"""for (size_t {_k} = {_start}; {_k} < {_end}; ++{_k}) {{{_type} {_v} = {_list_name}->ptr[{_k}];
 {for_body}}}\n"""
 
     return str_to_ret

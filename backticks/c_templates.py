@@ -1,6 +1,6 @@
 from ._tokens import *
 
-def make_bt_inbuilts_header():
+def make_bt_builtins_header():
     header = """#ifndef __BT_INBUILTS_HEADER__
 #define __BT_INBUILTS_HEADER__
 
@@ -15,7 +15,7 @@ def make_bt_inbuilts_header():
 #pragma GCC diagnostic ignored "-Wformat" 
 // #pragma GCC diagnostic ignored "-Wunknown-escape-sequence"
 
-typedef char * str;
+typedef char* str;
 
 typedef struct
 {
@@ -40,29 +40,31 @@ typedef struct
 
 typedef struct
 {
-    char **ptr;
-    char **ptr_copy;
+    str *ptr;
+    str *ptr_copy;
     size_t len;
 } str_list_t;
 
-char *_bt_input(FILE *in);
+
+str _bt_input(FILE *in);
 
 #endif
 """
 
-    with open("./C/_bt_inbuilts_.h", "w") as h_write:
+    with open("./C/_bt_builtins_.h", "w") as h_write:
         h_write.write(header)
 
-def make_inbuilts_source():
-    source = """#include "_bt_inbuilts_.h"
-char *_bt_input(FILE *in)
+def make_builtins_source():
+    source = """#include "_bt_builtins_.h"
+
+str _bt_input(FILE *in)
 {
     size_t alloc_length = 64;
     size_t cumulength = 0;
-    char * data = malloc(alloc_length);
+    str data = malloc(alloc_length);
     while (1) {
-        char * cursor = data + cumulength; // here we continue.
-        char * ret = fgets(cursor, alloc_length - cumulength, in);
+        str cursor = data + cumulength; // here we continue.
+        str ret = fgets(cursor, alloc_length - cumulength, in);
         // printf("r %p %p %zd %zd %zd\\n", data, cursor, cumulength, alloc_length, alloc_length - cumulength);
         if (!ret) {
             // Suppose we had EOF, no error.
@@ -79,7 +81,7 @@ char *_bt_input(FILE *in)
         // we need more!
         // At least, probably.
         size_t newlen = alloc_length * 2;
-        char * r = realloc(data, newlen);
+        str r = realloc(data, newlen);
         // printf("%zd\\n", newlen);
         if (r) {
             data = r;
@@ -90,12 +92,12 @@ char *_bt_input(FILE *in)
             return data;
         }
     }
-    char * r = realloc(data, cumulength + 1);
+    str r = realloc(data, cumulength + 1);
     // printf("%zd\\n", cumulength + 1);
     return r ? r : data; // shrinking should always have succeeded, but who knows?
 }
 """
-    with open("./C/_bt_inbuilts_.c", "w") as s_write:
+    with open("./C/_bt_builtins_.c", "w") as s_write:
         s_write.write(source)
 
 
