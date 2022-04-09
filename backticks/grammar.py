@@ -1,4 +1,3 @@
-from traceback import print_list
 from ._tokens import *
 from .tokenizer import Tokenizer
 from .c_templates import *
@@ -1206,6 +1205,13 @@ class BT_Grammar(Tokenizer):
         ret_val, _type = self.__eval_assign_values(
             vars_dict, tok_list, False, SEMI)
 
+        # print(ret_val)
+        if ret_val[0] != LEFTSQUARE and self.is_list(ret_val):
+            _list = ret_val.split(LEFTSQUARE)
+            new_name = _list[0] + "->ptr[" + _list[1]
+
+            ret_val = new_name
+
         ret_val = RETURN + SPACE + ret_val + SEMI
 
         return ret_val
@@ -1321,6 +1327,7 @@ class BT_Grammar(Tokenizer):
         _k = "_i_"
         _v = ""
         _obj = ""
+        _is_string = False
 
         for_body_toks = []
 
@@ -1351,7 +1358,11 @@ class BT_Grammar(Tokenizer):
             
         val, _type = self.__eval_assign_values(vars_dict, [_obj, ()], _global_call, SEMI)
 
-        if not _type or vars_dict[_obj][1].endswith("_list_t"):
+        if vars_dict[_obj][1] == STR:
+            _is_string = True
+            # print(vars_dict[_obj])
+
+        elif not _type or vars_dict[_obj][1].endswith("_list_t"):
             _type = vars_dict[_obj][1][:vars_dict[_obj][1].find("_list_t")]
 
         # print(val, _type)
@@ -1407,7 +1418,7 @@ class BT_Grammar(Tokenizer):
 
         # if _type == STR:
         #     _type = CHARSTAR
-        str_to_ret += access_elem_by_ref(_type, _k, _v, val, for_body, _start, _end)
+        str_to_ret += access_elem_by_ref(_type, _k, _v, val, for_body, _start, _end, _is_string)
 
         return str_to_ret
         

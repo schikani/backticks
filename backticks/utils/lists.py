@@ -59,15 +59,24 @@ def append_list(_type, var, vals_list):
 
     return str_to_ret
 
-def access_elem_by_ref(_type, _k, _v, _list_name, for_body, _start=None, _end=None):
+def access_elem_by_ref(_type, _k, _v, _list_name, for_body, _start=None, _end=None, string=False):
 
     if not _start:
         _start = 0
 
     if not _end:
-        _end = f"{_list_name}->len"
+        if not string:
+            _end = f"{_list_name}->len"
+        else:
+            _end = f"strlen({_list_name})"
+            # _type = "char"
+    
+    if not string:
+        _list_name += "->ptr"
+    
+    # print(_type)
 
-    str_to_ret = f"""for (size_t {_k} = {_start}; {_k} < {_end}; ++{_k}) {{{_type} {_v} = {_list_name}->ptr[{_k}];
+    str_to_ret = f"""for (size_t {_k} = {_start}; {_k} < {_end}; ++{_k}) {{{_type} {_v} = {_list_name}[{_k}];
 {for_body}}}\n"""
 
     return str_to_ret
