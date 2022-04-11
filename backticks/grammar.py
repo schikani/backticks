@@ -1372,7 +1372,7 @@ class BT_Grammar(Tokenizer):
         if not _type or vars_dict[_obj][1].endswith("_list_t"):
             _type = vars_dict[_obj][1][:vars_dict[_obj][1].find("_list_t")]
 
-        print(val, _type)
+        # print(val, _type)
         if _end:
             if _end.startswith(SUB):
                 _end = val + "->len" +_end
