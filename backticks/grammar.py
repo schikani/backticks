@@ -696,12 +696,16 @@ class BT_Grammar(Tokenizer):
                     _li_assign_idx = tok_list[2][tok_list[2].find(LEFTSQUARE)+1:tok_list[2].find(RIGHTSQUARE)]
                     tok_list[2] = tok_list[2][:tok_list[2].find(LEFTSQUARE)]
 
+                    # print(tok_list[2], _li_assign_idx)
+
+                    # print(val)
+
 
                 
                 # if not _dynamic_list and not _list_len and tok_list[2].endswith(RIGHTSQUARE):
 
 
-                if len(tok_list) > 1 and tok_list[2][0] == LEFTSQUARE and tok_list[2][-1] == RIGHTSQUARE:
+                elif len(tok_list) > 1 and tok_list[2][0] == LEFTSQUARE and tok_list[2][-1] == RIGHTSQUARE:
                     
                     val, _type = self.__eval_assign_values(vars_dict, [tok_list[2], SEMI], _global_call, SEMI)
                     # print(val, _type)
@@ -736,6 +740,10 @@ class BT_Grammar(Tokenizer):
                         vars_dict, tok_list[2:], _global_call, SEMI)
 
                     # print(val, _type)
+
+                if _type.endswith("_list_t") and not _dynamic_list:
+                    _type = _type[:-len("_list_t")]
+
                     
                 if _li_assign_idx:
                     val += "->ptr[" + _li_assign_idx + "]"
@@ -788,6 +796,9 @@ class BT_Grammar(Tokenizer):
 
 
             # print(var, val, _type)
+
+            # if _type.endswith("_list_t"):
+            #     _type = _type[:_type.find("_list_t")]
 
             if _global_call and not _dynamic_list and not _list_len and not _func_ret_list:
                 self._global_vars_list.append(f"{_type} {var}")
@@ -1327,7 +1338,6 @@ class BT_Grammar(Tokenizer):
         _k = "_i_"
         _v = ""
         _obj = ""
-        _is_string = False
 
         for_body_toks = []
 
@@ -1358,14 +1368,11 @@ class BT_Grammar(Tokenizer):
             
         val, _type = self.__eval_assign_values(vars_dict, [_obj, ()], _global_call, SEMI)
 
-        if vars_dict[_obj][1] == STR:
-            _is_string = True
-            # print(vars_dict[_obj])
 
-        elif not _type or vars_dict[_obj][1].endswith("_list_t"):
+        if not _type or vars_dict[_obj][1].endswith("_list_t"):
             _type = vars_dict[_obj][1][:vars_dict[_obj][1].find("_list_t")]
 
-        # print(val, _type)
+        print(val, _type)
         if _end:
             if _end.startswith(SUB):
                 _end = val + "->len" +_end
@@ -1418,7 +1425,7 @@ class BT_Grammar(Tokenizer):
 
         # if _type == STR:
         #     _type = CHARSTAR
-        str_to_ret += access_elem_by_ref(_type, _k, _v, val, for_body, _start, _end, _is_string)
+        str_to_ret += access_elem_by_ref(_type, _k, _v, val, for_body, _start, _end)
 
         return str_to_ret
         

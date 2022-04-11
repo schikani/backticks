@@ -2,10 +2,10 @@
 # let xyz[] = [True, False, True];
 
 
-< func(): str[]
+< func(): float[]
 {
-    let xyz[] = [`Hello`, `World`, `!`];
-    # let xyz[] = [10.5, 23.6, 45.78];
+    # let xyz[] = [`Hello`, `World`, `!`];
+    let xyz[] = [10.5, 23.6, 45.78];
     # let xyz[] = [10, 23, 45];
 
 
@@ -13,14 +13,19 @@
 }
 let f = func();
 
+let df = f[2];
+printl(df);
+
 for i, v in f
 {
     printl(`{i}: {v}`);
 }
 
-let a = `Shivang Chikani`;
-let b = 45.6;
-let c = 80;
-let d = True;
+# let a = f[0];
+# let b = 45.6;
+# let c = 80;
+# let d = True;
 
-printl(`{a} | {b} | {c} | {d} | {f[0]}`);
+# printl(`{a} | {b} | {c} | {d} | {f[0]}`);
+
+# let ghi[] = [`5`, `5`, `5`, `5`];
