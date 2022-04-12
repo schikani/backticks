@@ -1,49 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
-#include <ctype.h>
-
-typedef char* str;
-
-typedef struct 
-{
-  bool **ptr;
-  bool **ptr_copy;
-  size_t **dims;
-  size_t no_of_dims;
-} bool_list_t;
-
-typedef struct 
-{
-  long **ptr;
-  long **ptr_copy;
-  size_t **dims;
-  size_t no_of_dims;
-} long_list_t;
-
-typedef struct 
-{
-  double **ptr;
-  double **ptr_copy;
-  size_t **dims;
-  size_t no_of_dims;
-} double_list_t;
-
-typedef struct 
-{
-  str **ptr;
-  str **ptr_copy;
-  size_t **dims;
-  size_t no_of_dims;
-} str_list_t;
-
- 
-
-#define ARR(dim, row, col) arr->ptr[dim][dim * (arr->dims[dim][0] * arr->dims[dim][1]) + row * arr->dims[dim][1] + col]
-//arr3d[r][c][d]
-// becomes:
-// arr3d.data[r * (arr3d.b * arr3d.c) + c * arr3d.c + d];
+#include "_bt_builtins_.h"
 
 
 bool_list_t *new_bool_list(size_t dims, size_t **shapes)
@@ -176,11 +131,11 @@ void print_bool_list(bool_list_t *arr)
             {
                 if (k == arr->dims[i][1]-1)
                 {
-                    printf(ARR(i, j, k) ? "True]": "False]");  
+                    printf(__ARR__(i, j, k) ? "True]": "False]");  
                 }
                 else
                 {
-                    printf(ARR(i, j, k) ? "True, ": "False, ");  
+                    printf(__ARR__(i, j, k) ? "True, ": "False, ");  
                 } 
             }
             printf(j == arr->dims[i][0]-1 ? "]": ", ");
@@ -205,7 +160,7 @@ void print_long_list(long_list_t *arr)
             printf("[");
             for (size_t k = 0; k < arr->dims[i][1]; ++k)
             {
-                printf(k == arr->dims[i][1]-1 ? "%ld]": "%ld, ", ARR(i, j, k));
+                printf(k == arr->dims[i][1]-1 ? "%ld]": "%ld, ", __ARR__(i, j, k));
             }
             printf(j == arr->dims[i][0]-1 ? "]": ", ");
         }
@@ -229,7 +184,7 @@ void print_double_list(double_list_t *arr)
             printf("[");
             for (size_t k = 0; k < arr->dims[i][1]; ++k)
             {
-                printf(k == arr->dims[i][1]-1 ? "%f]": "%f, ", ARR(i, j, k));
+                printf(k == arr->dims[i][1]-1 ? "%f]": "%f, ", __ARR__(i, j, k));
             }
             printf(j == arr->dims[i][0]-1 ? "]": ", ");
         }
@@ -253,7 +208,7 @@ void print_str_list(str_list_t *arr)
             printf("[");
             for (size_t k = 0; k < arr->dims[i][1]; ++k)
             {
-                printf(k == arr->dims[i][1]-1 ? "%s]": "%s, ", ARR(i, j, k));
+                printf(k == arr->dims[i][1]-1 ? "%s]": "%s, ", __ARR__(i, j, k));
             }
             printf(j == arr->dims[i][0]-1 ? "]": ", ");
         }
@@ -265,6 +220,47 @@ void print_str_list(str_list_t *arr)
     printf("]\n");
 }
 
+
+
+str _bt_input(FILE *in)
+{
+    size_t alloc_length = 64;
+    size_t cumulength = 0;
+    str data = malloc(alloc_length);
+    while (1) {
+        str cursor = data + cumulength; // here we continue.
+        str ret = fgets(cursor, alloc_length - cumulength, in);
+        // printf("r %p %p %zd %zd %zd\n", data, cursor, cumulength, alloc_length, alloc_length - cumulength);
+        if (!ret) {
+            // Suppose we had EOF, no error.
+            // we just return what we read till now...
+            // there is still a \0 at cursor, so we are fine.
+            break;
+        }
+        size_t newlength = strlen(cursor); // how much is new?
+        cumulength += newlength; // add it to what we have.
+        if (cumulength < alloc_length - 1 || data[cumulength-1] == '\n') {
+            // not used the whole buffer... so we are probably done.
+            break;
+        }
+        // we need more!
+        // At least, probably.
+        size_t newlen = alloc_length * 2;
+        str r = realloc(data, newlen);
+        // printf("%zd\n", newlen);
+        if (r) {
+            data = r;
+            alloc_length = newlen;
+        } else {
+            // realloc error. Return at least what we have...
+            // TODO: or better free and return NULL?
+            return data;
+        }
+    }
+    str r = realloc(data, cumulength + 1);
+    // printf("%zd\n", cumulength + 1);
+    return r ? r : data; // shrinking should always have succeeded, but who knows?
+}
 
 int main(int argc, char *argv[])
 {
@@ -300,7 +296,7 @@ int main(int argc, char *argv[])
     double_list_t *arr = new_double_list(DIMS, shapes);
 
     arr->ptr_copy = arr->ptr;
-    ARR(atoi(argv[1]), atoi(argv[2]), atoi(argv[3])) = atoi(argv[4]);
+    __ARR__(atoi(argv[1]), atoi(argv[2]), atoi(argv[3])) = atoi(argv[4]);
     print_double_list(arr);
 
     free(arr->ptr_copy);
