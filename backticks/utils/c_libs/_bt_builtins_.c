@@ -222,6 +222,50 @@ void print_str_list(str_list_t *arr)
 
 
 
+
+int main(int argc, char *argv[])
+{
+    const int DIMS = 1;
+
+    size_t **shapes = calloc(DIMS, sizeof(size_t *));
+    
+    // Allocate memory for dimensions ex: (2, 2)
+    for (int i = 0; i < DIMS; ++i)
+    {
+        shapes[i] = (size_t *)calloc(2, sizeof(size_t));
+    }
+
+    // printf("Allocating memory for arr->dim[%d]\n", i);
+    shapes[0][0] = 1;
+    shapes[0][1] = 2;
+
+    // shapes[1][0] = 5;
+    // shapes[1][1] = 5;
+
+    // shapes[2][0] = 4;
+    // shapes[2][1] = 2;
+
+    // shapes[3][0] = 2;
+    // shapes[3][1] = 2;
+
+    // shapes[4][0] = 2;
+    // shapes[4][1] = 2;
+
+    // shapes[5][0] = 2;
+    // shapes[5][1] = 2;
+    
+    long_list_t *arr = new_long_list(DIMS, shapes);
+
+    __ARR__(atoi(argv[1]), atoi(argv[2]), atoi(argv[3])) = atoi(argv[4]);
+    print_long_list(arr);
+
+    free(arr->ptr_copy);
+    free(arr);
+    return 0;
+}
+
+
+
 str _bt_input(FILE *in)
 {
     size_t alloc_length = 64;
@@ -260,46 +304,4 @@ str _bt_input(FILE *in)
     str r = realloc(data, cumulength + 1);
     // printf("%zd\n", cumulength + 1);
     return r ? r : data; // shrinking should always have succeeded, but who knows?
-}
-
-int main(int argc, char *argv[])
-{
-    const int DIMS = 2;
-
-    size_t **shapes = calloc(DIMS, sizeof(size_t *));
-    
-    // Allocate memory for dimensions ex: (2, 2)
-    for (int i = 0; i < DIMS; ++i)
-    {
-        shapes[i] = (size_t *)calloc(2, sizeof(size_t));
-    }
-
-    // printf("Allocating memory for arr->dim[%d]\n", i);
-    shapes[0][0] = 5;
-    shapes[0][1] = 5;
-
-    shapes[1][0] = 5;
-    shapes[1][1] = 5;
-
-    // shapes[2][0] = 2;
-    // shapes[2][1] = 2;
-
-    // shapes[3][0] = 2;
-    // shapes[3][1] = 2;
-
-    // shapes[4][0] = 2;
-    // shapes[4][1] = 2;
-
-    // shapes[5][0] = 2;
-    // shapes[5][1] = 2;
-    
-    double_list_t *arr = new_double_list(DIMS, shapes);
-
-    arr->ptr_copy = arr->ptr;
-    __ARR__(atoi(argv[1]), atoi(argv[2]), atoi(argv[3])) = atoi(argv[4]);
-    print_double_list(arr);
-
-    free(arr->ptr_copy);
-    free(arr);
-    return 0;
 }
