@@ -1,49 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
-#include <ctype.h>
-
-typedef char* str;
-
-typedef struct 
-{
-  bool **ptr;
-  bool **ptr_copy;
-  size_t **dims;
-  size_t no_of_dims;
-} bool_list_t;
-
-typedef struct 
-{
-  long **ptr;
-  long **ptr_copy;
-  size_t **dims;
-  size_t no_of_dims;
-} long_list_t;
-
-typedef struct 
-{
-  double **ptr;
-  double **ptr_copy;
-  size_t **dims;
-  size_t no_of_dims;
-} double_list_t;
-
-typedef struct 
-{
-  str **ptr;
-  str **ptr_copy;
-  size_t **dims;
-  size_t no_of_dims;
-} str_list_t;
-
- 
-
-#define ARR(dim, row, col) arr->ptr[dim][dim * (arr->dims[dim][0] * arr->dims[dim][1]) + row * arr->dims[dim][1] + col]
-//arr3d[r][c][d]
-// becomes:
-// arr3d.data[r * (arr3d.b * arr3d.c) + c * arr3d.c + d];
+#include "_bt_builtins_.h"
 
 
 bool_list_t *new_bool_list(size_t dims, size_t **shapes)
@@ -176,11 +131,11 @@ void print_bool_list(bool_list_t *arr)
             {
                 if (k == arr->dims[i][1]-1)
                 {
-                    printf(ARR(i, j, k) ? "True]": "False]");  
+                    printf(__ARR__(i, j, k) ? "True]": "False]");  
                 }
                 else
                 {
-                    printf(ARR(i, j, k) ? "True, ": "False, ");  
+                    printf(__ARR__(i, j, k) ? "True, ": "False, ");  
                 } 
             }
             printf(j == arr->dims[i][0]-1 ? "]": ", ");
@@ -198,16 +153,16 @@ void print_long_list(long_list_t *arr)
     printf("[");
     for (size_t i = 0; i < arr->no_of_dims; i++)
     {
-        // printf("DIMENSION: %ld\n", i);
         printf("[");
         for (size_t j = 0; j < arr->dims[i][0]; ++j)
         {
             printf("[");
             for (size_t k = 0; k < arr->dims[i][1]; ++k)
             {
-                printf(k == arr->dims[i][1]-1 ? "%ld]": "%ld, ", ARR(i, j, k));
+                printf(k == arr->dims[i][1]-1 ? "%ld]": "%ld, ", __ARR__(i, j, k));
             }
             printf(j == arr->dims[i][0]-1 ? "]": ", ");
+            
         }
         if (i < arr->no_of_dims-1)
         {
@@ -229,7 +184,7 @@ void print_double_list(double_list_t *arr)
             printf("[");
             for (size_t k = 0; k < arr->dims[i][1]; ++k)
             {
-                printf(k == arr->dims[i][1]-1 ? "%f]": "%f, ", ARR(i, j, k));
+                printf(k == arr->dims[i][1]-1 ? "%f]": "%f, ", __ARR__(i, j, k));
             }
             printf(j == arr->dims[i][0]-1 ? "]": ", ");
         }
@@ -253,7 +208,7 @@ void print_str_list(str_list_t *arr)
             printf("[");
             for (size_t k = 0; k < arr->dims[i][1]; ++k)
             {
-                printf(k == arr->dims[i][1]-1 ? "%s]": "%s, ", ARR(i, j, k));
+                printf(k == arr->dims[i][1]-1 ? "%s]": "%s, ", __ARR__(i, j, k));
             }
             printf(j == arr->dims[i][0]-1 ? "]": ", ");
         }
@@ -266,44 +221,49 @@ void print_str_list(str_list_t *arr)
 }
 
 
+
 int main(int argc, char *argv[])
 {
-    const int DIMS = 2;
+
+    const size_t DIMS = argc-2;
+    const str type = argv[1];
+    char *dims = argv[2];
+
+    // printf("%d\n", DIMS);
 
     size_t **shapes = calloc(DIMS, sizeof(size_t *));
     
     // Allocate memory for dimensions ex: (2, 2)
-    for (int i = 0; i < DIMS; ++i)
+    for (int i = 0, j = 1; i < DIMS; ++i, ++j)
     {
         shapes[i] = (size_t *)calloc(2, sizeof(size_t));
+        shapes[i][0] = atoi(strtok(argv[j+1], ","));
+        shapes[i][1] = atoi(strtok(NULL, ","));
+    }
+    if (strcmp(type, "bool") == 0)
+    {
+        bool_list_t *arr = new_bool_list(DIMS, shapes);
+        print_bool_list(arr);
+    }
+    else if (strcmp(type, "long") == 0)
+    {
+        long_list_t *arr = new_long_list(DIMS, shapes);
+        print_long_list(arr);
+    }
+    else if (strcmp(type, "double") == 0)
+    {
+        double_list_t *arr = new_double_list(DIMS, shapes);
+        print_double_list(arr);
+    }
+    else if (strcmp(type, "str") == 0)
+    {
+        str_list_t *arr = new_str_list(DIMS, shapes);
+        print_str_list(arr);
     }
 
-    // printf("Allocating memory for arr->dim[%d]\n", i);
-    shapes[0][0] = 5;
-    shapes[0][1] = 5;
 
-    shapes[1][0] = 5;
-    shapes[1][1] = 5;
+    // free(arr->ptr_copy);
+    // free(arr);
 
-    // shapes[2][0] = 2;
-    // shapes[2][1] = 2;
-
-    // shapes[3][0] = 2;
-    // shapes[3][1] = 2;
-
-    // shapes[4][0] = 2;
-    // shapes[4][1] = 2;
-
-    // shapes[5][0] = 2;
-    // shapes[5][1] = 2;
-    
-    double_list_t *arr = new_double_list(DIMS, shapes);
-
-    arr->ptr_copy = arr->ptr;
-    ARR(atoi(argv[1]), atoi(argv[2]), atoi(argv[3])) = atoi(argv[4]);
-    print_double_list(arr);
-
-    free(arr->ptr_copy);
-    free(arr);
     return 0;
 }

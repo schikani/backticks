@@ -2,28 +2,11 @@
 # let xyz[] = [True, False, True];
 
 
-< func(): float[][]
+< func(): float[]
 {
-    const new_list[500][500]: float;
-
-
+    let xyz[10] = [0.2, 12.36, 56.22];
     return xyz;
 }
 
 let f = func();
 
-
-f <- [[]];
-f[0] <- []
-f[0][0] = 45.95;
-
-
-
-
-# f[0][0][0] = 45.63;
-
-
-for i, v in f
-{
-    printl(`{i}: {v}`);
-}
