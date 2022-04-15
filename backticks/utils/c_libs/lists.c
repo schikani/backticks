@@ -22,9 +22,12 @@ bool_list_t *new_bool_list(size_t dims, size_t **shapes)
         // ROWS[0] and COLS[1]
         arr->ptr[i] = calloc(arr->dims[i][0]*arr->dims[i][1], sizeof(bool));
 
-        for (size_t j = 0; j < arr->dims[i][0]*arr->dims[i][1]; ++j)
+        for (size_t j = 0; j < arr->dims[i][0]; ++j)
         {
-            arr->ptr[i][j] = 0;
+            for (size_t k = 0; k < arr->dims[i][1]; ++k)
+            {
+                __ARR__(i, j, k) = false;
+            }
         }
     }
     return arr;
@@ -51,9 +54,12 @@ long_list_t *new_long_list(size_t dims, size_t **shapes)
         // ROWS[0] and COLS[1]
         arr->ptr[i] = calloc(arr->dims[i][0]*arr->dims[i][1], sizeof(long));
 
-        for (size_t j = 0; j < arr->dims[i][0]*arr->dims[i][1]; ++j)
+        for (size_t j = 0; j < arr->dims[i][0]; ++j)
         {
-            arr->ptr[i][j] = 0;
+            for (size_t k = 0; k < arr->dims[i][1]; ++k)
+            {
+                __ARR__(i, j, k) = 0;
+            }
         }
     }
     return arr;
@@ -80,9 +86,12 @@ double_list_t *new_double_list(size_t dims, size_t **shapes)
         // ROWS[0] and COLS[1]
         arr->ptr[i] = calloc(arr->dims[i][0]*arr->dims[i][1], sizeof(double));
 
-        for (size_t j = 0; j < arr->dims[i][0]*arr->dims[i][1]; ++j)
+        for (size_t j = 0; j < arr->dims[i][0]; ++j)
         {
-            arr->ptr[i][j] = 0;
+            for (size_t k = 0; k < arr->dims[i][1]; ++k)
+            {
+                __ARR__(i, j, k) = 0.0f;
+            }
         }
     }
     return arr;
@@ -107,11 +116,14 @@ str_list_t *new_str_list(size_t dims, size_t **shapes)
     for (size_t i = 0; i < arr->no_of_dims; ++i)
     {   
         // ROWS[0] and COLS[1]
-        arr->ptr[i] = calloc((arr->dims[i][0]*arr->dims[i][1])+1, sizeof(str));
+        arr->ptr[i] = calloc(arr->dims[i][0]*arr->dims[i][1], sizeof(str));
 
-        for (size_t j = 0; j < arr->dims[i][0]*arr->dims[i][1]; ++j)
+        for (size_t j = 0; j < arr->dims[i][0]; ++j)
         {
-            arr->ptr[i][j] = "0";
+            for (size_t k = 0; k < arr->dims[i][1]; ++k)
+            {
+                __ARR__(i, j, k) = NULL;
+            }
         }
     }
     return arr;
