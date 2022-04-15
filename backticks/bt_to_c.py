@@ -38,7 +38,8 @@ class BT_to_C(BT_Grammar):
         
         # print(src_files)
         
-        c_sources = ""
+        # Add builtins
+        c_sources = "./C/_bt_builtins_.c "
         for s in list(src_files):
             c_sources += "./C/" + s + SPACE
 

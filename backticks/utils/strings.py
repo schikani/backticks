@@ -1,12 +1,15 @@
 from backticks._tokens import *
 
-def user_input(var, prompt=""):
+def user_input(var, prompt="", func=False):
     str_to_ret = ""
 
     if prompt:
         str_to_ret += f'printf({prompt});' + NEWLINE
         
-    str_to_ret += f"{var} = _bt_input(stdin);" + NEWLINE
+    str_to_ret += f"{'str ' if func else ''}{var} = _bt_input(stdin);" + NEWLINE
+    # str_to_ret += f"if ({var}[strlen({var})-1] == '\\n')"
+    str_to_ret += f"{var}[strlen({var})-1] = 0;" + NEWLINE
+                    
 
     return str_to_ret
 

@@ -88,8 +88,7 @@ class BT_Grammar(Tokenizer):
             if self.is_list(v) or self.is_string(v) or self.is_string(v, vars_dict) or\
                 self.is_string(v, self._vars_dict["GLOBALS"]["global_vars"]) or\
                 self.is_string(v, self._vars_dict["FUNCS"], func=True) or\
-                self.is_string(tok_list[_val_idx+1]) or\
-                v == INPUT and tok_list[_val_idx+1] == LEFTBRACK:
+                self.is_string(tok_list[_val_idx+1]):
 
                     if self.is_list(v) and v[0] == LEFTSQUARE:
                         if self.is_float(v):
@@ -293,8 +292,8 @@ class BT_Grammar(Tokenizer):
                         # continue
                         break
                         
-                    elif v == INPUT and tok_list[_val_idx+1] == LEFTBRACK and self.is_string(tok_list[_val_idx+2]):
-                        print("~"+v+"~")
+                    # elif v == INPUT and tok_list[_val_idx+1] == LEFTBRACK and self.is_string(tok_list[_val_idx+2]):
+                    #     print("~"+v+"~")
                         # user_input()
                         # val += f"_bt_input({self.__bt_to_c_str(tok_list[_val_idx+2])});"
                     
@@ -699,10 +698,29 @@ class BT_Grammar(Tokenizer):
                     # print(tok_list[2], _li_assign_idx)
 
                     # print(val)
-
-
                 
-                # if not _dynamic_list and not _list_len and tok_list[2].endswith(RIGHTSQUARE):
+                # User input
+                elif tok_list[2] == INPUT and tok_list[3] == LEFTBRACK:
+                    _func = False
+
+                    if _global_call:
+                        self._global_vars_list.append(f"str {var}")
+                        var = self.bin_name + DOT + var
+                    else:
+                        _func = True
+
+                    if self.is_string(tok_list[4]):
+                        val = user_input(var, self.__bt_to_c_str(tok_list[4]), func=_func)
+                    else:
+                        val = user_input(var, func=_func)
+
+                        
+                    vars_dict[tok_list[0]].append(val)
+                    vars_dict[tok_list[0]].append(STR)
+                    vars_dict[tok_list[0]].append(False)
+
+                    return val
+
 
 
                 elif len(tok_list) > 1 and tok_list[2][0] == LEFTSQUARE and tok_list[2][-1] == RIGHTSQUARE:

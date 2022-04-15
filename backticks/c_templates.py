@@ -1,8 +1,8 @@
 from ._tokens import *
 
 def make_bt_builtins_header():
-    header = """#ifndef __BT_INBUILTS_HEADER__
-#define __BT_INBUILTS_HEADER__
+    header = """#ifndef __BT_BUILTINS_HEADER__
+#define __BT_BUILTINS_HEADER__
 
 #include <stdio.h>
 #include <stdlib.h>
