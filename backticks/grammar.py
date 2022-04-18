@@ -584,7 +584,7 @@ class BT_Grammar(Tokenizer):
             # String or Number
             if toks[1] == ADD and toks[2] == EQUALS:
                 if _type == STR:
-                        str_to_ret += concat_str(t, val)
+                    str_to_ret += concat_str(t, val)
 
                 else:
                     str_to_ret += t + ADD + EQUALS + val + SEMI + NEWLINE
@@ -594,10 +594,10 @@ class BT_Grammar(Tokenizer):
                 str_to_ret += t + toks[1] + EQUALS + val + SEMI + NEWLINE
 
             # Case '='
-            else:
+            elif toks[1] == EQUALS:
                 if _type == STR:
-                        str_to_ret += free_str(t)
-                        str_to_ret += new_str(t, val)
+                    str_to_ret += free_str(t)
+                    str_to_ret += new_str(t, val)
 
                 else:
                     str_to_ret += t + EQUALS + val + SEMI + NEWLINE
@@ -840,10 +840,10 @@ class BT_Grammar(Tokenizer):
             elif _dynamic_list:
                 if _global_call:
                     # print(_type, var, val)
-                    return new_list(_type, var, val.replace(LEFTSQUARE, "").replace(RIGHTSQUARE, "").split(COMA), _len=_list_len)
+                    return new_list(_type, var, val.replace(LEFTSQUARE, "").replace(RIGHTSQUARE, "").split(COMA), _reserve=_list_len)
                 else:
                     # print(_type, var, val)
-                    return new_list(_type, var, val.replace(LEFTSQUARE, "").replace(RIGHTSQUARE, "").split(COMA), _len=_list_len, _func=True)
+                    return new_list(_type, var, val.replace(LEFTSQUARE, "").replace(RIGHTSQUARE, "").split(COMA), _reserve=_list_len, _func=True)
             
             else:
                 if _global_call:

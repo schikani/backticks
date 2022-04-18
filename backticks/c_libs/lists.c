@@ -233,49 +233,96 @@ void print_str_list(str_list_t *arr)
 }
 
 
-
-int main(int argc, char *argv[])
+void get_shapes(char *argv[])
 {
+    // const size_t DIMS = argc-2;
+    // const str type = argv[0];
+    
+    size_t DIMS = 0;
+    int count = 0;
+    char **args = argv;
 
-    const size_t DIMS = argc-2;
-    const str type = argv[1];
-    char *dims = argv[2];
+    while (args[DIMS] != NULL)
+        DIMS++;
 
-    // printf("%d\n", DIMS);
+    printf("DIMS: %ld\n", DIMS);
+    printf("------------\n");
 
     size_t **shapes = calloc(DIMS, sizeof(size_t *));
     
     // Allocate memory for dimensions ex: (2, 2)
-    for (int i = 0, j = 1; i < DIMS; ++i, ++j)
+    for (size_t i = 0; i < DIMS; ++i)
     {
-        shapes[i] = (size_t *)calloc(2, sizeof(size_t));
-        shapes[i][0] = atoi(strtok(argv[j+1], ","));
-        shapes[i][1] = atoi(strtok(NULL, ","));
+        printf("%ld\n", i);
+        shapes[i] = calloc(2, sizeof(size_t));
+        shapes[i][0] = atoi(strtok(args[i], ","));
+        shapes[i][1] = atoi(strtok(NULL, "|"));
+
+        printf("%ld, %ld\n", shapes[i][0], shapes[i][1]);
     }
-    if (strcmp(type, "bool") == 0)
-    {
-        bool_list_t *arr = new_bool_list(DIMS, shapes);
-        print_bool_list(arr);
-    }
-    else if (strcmp(type, "long") == 0)
-    {
-        long_list_t *arr = new_long_list(DIMS, shapes);
-        print_long_list(arr);
-    }
-    else if (strcmp(type, "double") == 0)
-    {
-        double_list_t *arr = new_double_list(DIMS, shapes);
-        print_double_list(arr);
-    }
-    else if (strcmp(type, "str") == 0)
-    {
-        str_list_t *arr = new_str_list(DIMS, shapes);
-        print_str_list(arr);
-    }
+}
+
+
+
+int main(int argc, char *argv[])
+{
+
+    // size_t **shapes = get_shapes(argv);
+
+    char *list_args[] = {
+        "1,2|",
+        "2,2|",
+        "2,2|",
+        "2,2|",
+        NULL
+    };
+
+    get_shapes(list_args);
+
+
+    // const size_t DIMS = argc-2;
+    // const str type = argv[1];
+
+    // // printf("%d\n", DIMS);
+
+    // size_t **shapes = calloc(DIMS, sizeof(size_t *));
+    
+    // // Allocate memory for dimensions ex: (2, 2)
+    // for (int i = 0, j = 1; i < DIMS; ++i, ++j)
+    // {
+    //     shapes[i] = (size_t *)calloc(2, sizeof(size_t));
+    //     shapes[i][0] = atoi(strtok(argv[j+1], ","));
+    //     shapes[i][1] = atoi(strtok(NULL, ","));
+    // }
+    // if (strcmp(type, "bool") == 0)
+    // {
+    //     bool_list_t *arr = new_bool_list(DIMS, shapes);
+    //     print_bool_list(arr);
+    // }
+    // else if (strcmp(type, "long") == 0)
+    // {
+    //     long_list_t *arr = new_long_list(DIMS, shapes);
+    //     print_long_list(arr);
+    // }
+    // else if (strcmp(type, "double") == 0)
+    // {
+    //     double_list_t *arr = new_double_list(DIMS, shapes);
+    //     print_double_list(arr);
+    // }
+    // else if (strcmp(type, "str") == 0)
+    // {
+    //     str_list_t *arr = new_str_list(DIMS, shapes);
+    //     print_str_list(arr);
+    // }
 
 
     // free(arr->ptr_copy);
     // free(arr);
+
+
+
+
+
 
     return 0;
 }

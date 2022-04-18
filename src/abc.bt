@@ -4,7 +4,15 @@
 
 < func(): float[]
 {
-    let xyz[] = [0.2, 12.36, 56.22];
+    let xyz[] = [0.2, 12.36, 56.22, 67.9];
+    xyz <- 85.6, 67.8, 90.9;
+
+    # let xyz[5] = [1, 2, 3, 4, 5];
+    # xyz <- 6, 7, 8, 9, 10;
+
+    # let xyz[] = [`True`, `False`];
+    # xyz <- `False`;
+
     return xyz;
 }
 
@@ -24,11 +32,11 @@ for idx, v in f
 #     printl(`HELLO!!`);
 # }
 
-@ gta(): str
-{
-    let a = input(`> `);
-    return a;
-}
+# @ gta(): str
+# {
+#     let a = input(`> `);
+#     return a;
+# }
 
-# gta();
-printl(gta());
+# # gta();
+# printl(gta());

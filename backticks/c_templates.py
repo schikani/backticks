@@ -22,6 +22,7 @@ typedef struct
     bool *ptr;
     bool *ptr_copy;
     size_t len;
+    size_t reserve;
 } bool_list_t;
 
 typedef struct
@@ -29,6 +30,7 @@ typedef struct
     double *ptr;
     double *ptr_copy;
     size_t len;
+    size_t reserve;
 } double_list_t;
 
 typedef struct
@@ -36,6 +38,7 @@ typedef struct
     long *ptr;
     long *ptr_copy;
     size_t len;
+    size_t reserve;
 } long_list_t;
 
 typedef struct
@@ -43,13 +46,19 @@ typedef struct
     str *ptr;
     str *ptr_copy;
     size_t len;
+    size_t reserve;
 } str_list_t;
 
 
 str _bt_input(FILE *in);
-
-#endif
 """
+    types = ["bool", "double", "long", "str"]
+
+    for t in types:
+        header += f"{t}_list_t *new_{t}_list(size_t reserve);\n"
+        header += f"void check_reserve_{t}_list({t}_list_t *arr);\n"
+
+    header += "#endif\n"
 
     with open("./C/_bt_builtins_.h", "w") as h_write:
         h_write.write(header)
@@ -96,6 +105,36 @@ str _bt_input(FILE *in)
     // printf("%zd\\n", cumulength + 1);
     return r ? r : data; // shrinking should always have succeeded, but who knows?
 }
+
+"""
+    types = ["bool", "double", "long", "str"]
+    for t in types:
+        source += f"""{t}_list_t *new_{t}_list(size_t reserve)
+{{
+    {t}_list_t *arr = calloc(1, sizeof({t}_list_t));
+    arr->len = 0;
+    arr->reserve = reserve;
+    arr->ptr = calloc(arr->reserve, sizeof({t}));
+    arr->ptr_copy = arr->ptr;
+
+    return arr;
+}}
+
+void check_reserve_{t}_list({t}_list_t *arr)
+{{
+    if (arr->len == arr->reserve)
+    {{
+        arr->reserve += arr->len;
+        printf("Reallocating memory!\\n");
+        arr->ptr = realloc(arr->ptr, (arr->reserve)*sizeof({t}));
+        if (arr->ptr == NULL)
+        {{
+            printf("Memory allocation failed!\\n");
+            exit(1);
+        }}
+    }}
+}}
+
 """
     with open("./C/_bt_builtins_.c", "w") as s_write:
         s_write.write(source)
