@@ -1,0 +1,56 @@
+< class Person(< name: str, @ age: int)
+{
+    __init__
+    {
+    }
+
+    < get_name(): str
+    {
+        return .name;
+    }
+
+    < set_name(name: str)
+    {
+        .name = name;
+    }
+}
+
+
+
+
+
+
+# class Object
+# {
+#     @ name: str;
+
+#     __init__(name: str)
+#     {
+#         this.name = name;
+#     }
+# }
+
+# class Person <- Object
+# {
+#     @ name: str;
+#     @ age: int;
+
+#     __init__(name: str, age: int)
+#     {
+#         super(name);
+#         this.name = name;
+#         this.age = age;
+#     }
+# }
+
+
+
+
+# @ name: str;
+# @ age: int;
+
+# __init__(name: str, age: int)
+# {
+#     this.name = name;
+#     this.age = age;
+# }

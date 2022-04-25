@@ -45,6 +45,7 @@ class BT_Grammar(Tokenizer):
         '''
         self._vars_dict["GLOBALS"] = {"global_vars": {}}
         self._vars_dict["FUNCS"] = {}
+        self._vars_dict["CLASSES"] = {}
         # self._vars_dict["INBUILT_FUNCS"] = {}
         # self._vars_dict["INBUILT_FUNCS"][f"input_{self.bin_name}"] = [("", STR), {"var1": ["", STR]}]
 
@@ -1077,17 +1078,91 @@ class BT_Grammar(Tokenizer):
         return False
     
     def __class(self, toks):
-        
+
+        inherited_classes = []
         class_type = toks[0]
-        toks = toks[toks.index(LEFTCURL)+1:]
+        class_name = CLASS + "_" + toks[2] + "_" + self.bin_name
+        self._vars_dict["CLASSES"][class_name] = dict()
+
+        class_dict = dict()
+        class_dict["priv_vars"] = dict()
+        class_dict["pub_vars"] = dict()
+        class_dict["priv_funcs"] = dict()
+        class_dict["pub_funcs"] = dict()
+
+
+        __init = ""
 
         if class_type == PUB_FUNC:
             print("PUBLIC")
         elif class_type == FUNCTION:
             print("PRIVATE")
 
+        toks = toks[toks.index(LEFTBRACK)+1:toks.index(RIGHTBRACK)]
+        print(toks)
+        _idx = 0
+        param_list = False
+        while (_idx < len(toks)):
+            if _idx < len(toks):
+                _var_type = toks[_idx]
+                # _idx += 1
+                _var = toks[_idx+1]
+                # To skip :
+                # _idx += 2
+                _type = toks[_idx+2]
+
+                _sub_t = False
+                val = ""
+
+                if _var.endswith("[]"):
+                    _var = _var[:_var.find(LEFTSQUARE)]
+                    _sub_t = "__LIST__"
+                    param_list = True
+
+                if _type == INT:
+                    _type = LONG
+                    val = "0"
+
+                elif _type == FLOAT:
+                    _type = DOUBLE
+                    val = "0.0f"
+
+                elif _type == STR:
+                    val = ""
+                
+                if param_list:
+                    param_list = False
+                    _type += "_list_t"
+
+                if _var_type == PUB_FUNC:
+                    class_dict["pub_vars"][_var] = [val, _type]
+                elif _var_type == FUNCTION:
+                    class_dict["priv_vars"][_var] = [val, _type]
+                
+                self._vars_dict["CLASSES"].update(class_dict)
+
+            _idx += 1
+
+            
+
+        toks = toks[toks.index(LEFTCURL):]
+
+        if toks[1] == "__init__":
+            for t in toks[3:toks.index(RIGHTCURL)]:
+                __init += t
+
+        print(__init)
+
+        toks = toks[toks.index(RIGHTCURL)+1:-1]
+
+        # for idx, i in enumerate(toks):
+        #     if i.startswith(DOT):
+        #         toks[idx] = "self->" + i[1:]
+
+
         print(toks)
         
+        self._vars_dict["CLASSES"].update(class_dict)
 
 
     def __func(self, current_func, toks):
@@ -1537,7 +1612,7 @@ class BT_Grammar(Tokenizer):
                     
                 elif t == FUNCTION or t == PUB_FUNC and toks[idx+1] != SUB and toks[idx+1] == CLASS:
                     
-                    print(toks)
+                    # print(toks)
                     self.__class(toks)
                     
                     break

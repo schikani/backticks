@@ -35,6 +35,10 @@ if len(args):
 # pprint.pprint(source._vars_dict["FUNCS"])
 # print("\n\n")
 
+print("CLASSES\n")
+pprint.pprint(source._vars_dict["CLASSES"])
+print("\n\n")
+
 # pprint.pprint(source.tokens)
 # pprint.pprint(source._imports_dict)
 # print(source._imports_dict)

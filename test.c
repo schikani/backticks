@@ -5,10 +5,30 @@
 
 typedef char* str;
 
+typedef struct Object_t
+{
+    str id;
+    str class_name;
+} Object_t;
+Object_t *Object_t__init__(const str id, const str class_name);
+
+Object_t *Object_t__init__(const str id, const str class_name)
+{
+
+    Object_t *self = calloc(1, sizeof(Object_t));
+    self->id = calloc(20, sizeof(char));
+    self->class_name = calloc(20, sizeof(char));
+    strcpy(self->id, id);
+    strcpy(self->class_name, class_name);
+
+    return self;
+}
+
 
 // ---------------------------------------------------------------------------------------
 typedef struct class_Hobby
 {
+    Object_t *obj;
     str hobby_name;
     str hobby_description;
     void (*set_hobby_name)(struct class_Hobby *self, str hobby_name);
@@ -65,6 +85,7 @@ class_Hobby *class_Hobby__init__()
 // ---------------------------------------------------------------------------------------
 typedef struct class_Person
 {
+    Object_t *obj;
     class_Hobby *class_Hobby;
     str name;
     long age;
@@ -89,6 +110,7 @@ void class_Person_set_name(class_Person *self, str name)
 class_Person *class_Person__init__()
 {
     class_Person *self = calloc(1, sizeof(class_Person));
+    self->obj = Object_t__init__("asd45", "Person");
     self->age = 25;
     self->name = calloc(20, sizeof(char));
     strcpy(self->name, "Shivang");
@@ -132,6 +154,9 @@ int main()
 
     person1->class_Hobby->set_hobby_description(person1->class_Hobby, "I usually don't play football nowadays.");
     printf("person1: %s\n", person1->class_Hobby->hobby_description);
+
+    printf("%s\n", person1->obj->id);
+    printf("%s\n", person1->obj->class_name);
 
 
 
