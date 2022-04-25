@@ -1,0 +1,16 @@
+< class Person(name: str)
+{
+    # __init__()
+    # {
+    # }
+
+    @ set_name(name: str)
+    {
+        .name = name;
+    }
+
+    < get_name(): str
+    {
+        return .name;
+    }
+}

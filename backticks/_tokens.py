@@ -48,7 +48,7 @@ G_THAN      =          '>'
 S_THAN      =          '<'
 
 # POW             "**"
-
+CLASS       =    "class"
 VOID        =    "void"
 LONG        =    "long"
 DOUBLE      =    "double"

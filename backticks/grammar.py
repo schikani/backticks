@@ -1075,6 +1075,20 @@ class BT_Grammar(Tokenizer):
         if name + "_" + self.bin_name in self._vars_dict["FUNCS"]:
             return name + "_" + self.bin_name
         return False
+    
+    def __class(self, toks):
+        
+        class_type = toks[0]
+        toks = toks[toks.index(LEFTCURL)+1:]
+
+        if class_type == PUB_FUNC:
+            print("PUBLIC")
+        elif class_type == FUNCTION:
+            print("PRIVATE")
+
+        print(toks)
+        
+
 
     def __func(self, current_func, toks):
 
@@ -1515,11 +1529,19 @@ class BT_Grammar(Tokenizer):
                    break
 
 
-                elif t == FUNCTION or t == PUB_FUNC and toks[idx+1] != SUB:
+                elif t == FUNCTION or t == PUB_FUNC and toks[idx+1] != SUB and toks[idx+1] != CLASS:
                     current_func = toks[idx+1]
                     self.__func(current_func, toks)
 
                     break
+                    
+                elif t == FUNCTION or t == PUB_FUNC and toks[idx+1] != SUB and toks[idx+1] == CLASS:
+                    
+                    print(toks)
+                    self.__class(toks)
+                    
+                    break
+                
 
                 elif self.is_keyword(t):
 
