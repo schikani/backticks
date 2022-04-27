@@ -1098,71 +1098,62 @@ class BT_Grammar(Tokenizer):
         elif class_type == FUNCTION:
             print("PRIVATE")
 
-        toks = toks[toks.index(LEFTBRACK)+1:toks.index(RIGHTBRACK)]
-        print(toks)
-        _idx = 0
-        param_list = False
+        toks = toks[toks.index(LEFTBRACK)+1:-1]
+        count = 0
+        if toks[0] == "__init__":
+            count = 1
+            while True:
+                if(toks[count] == PUB_FUNC and toks[count+2] == LEFTBRACK) or (toks[count] == FUNCTION and toks[count+2] == LEFTBRACK):
+                    break
+                __init += toks[count]
+                count += 1
+        # print(__init)
+        _idx = count-1
+        sub_toks = []
+        current_func = ""
         while (_idx < len(toks)):
-            if _idx < len(toks):
-                _var_type = toks[_idx]
-                # _idx += 1
-                _var = toks[_idx+1]
-                # To skip :
-                # _idx += 2
-                _type = toks[_idx+2]
 
-                _sub_t = False
-                val = ""
+            # if _idx == count-1:
+            #     sub_toks.append(toks[_idx])
+            #     _idx += 1
+            #     continue
 
-                if _var.endswith("[]"):
-                    _var = _var[:_var.find(LEFTSQUARE)]
-                    _sub_t = "__LIST__"
-                    param_list = True
+            # if toks[_idx] != PUB_FUNC or toks[_idx] != FUNCTION:
+            #     sub_toks.append(toks[_idx])
 
-                if _type == INT:
-                    _type = LONG
-                    val = "0"
+            if toks[_idx] == PUB_FUNC or toks[_idx] == FUNCTION:
+                _idx += 1
+                while toks[_idx] != PUB_FUNC or toks[_idx] != FUNCTION:
+                    sub_toks.append(toks[_idx])
+                    _idx += 1
 
-                elif _type == FLOAT:
-                    _type = DOUBLE
-                    val = "0.0f"
-
-                elif _type == STR:
-                    val = ""
-                
-                if param_list:
-                    param_list = False
-                    _type += "_list_t"
-
-                if _var_type == PUB_FUNC:
-                    class_dict["pub_vars"][_var] = [val, _type]
-                elif _var_type == FUNCTION:
-                    class_dict["priv_vars"][_var] = [val, _type]
-                
-                self._vars_dict["CLASSES"].update(class_dict)
+                print(sub_toks)
 
             _idx += 1
+            
+        self._vars_dict["CLASSES"][class_name].update(class_dict)
+
 
             
+        # print(toks)
+        # toks = toks[toks.index(LEFTCURL):]
 
-        toks = toks[toks.index(LEFTCURL):]
+        # if toks[1] == "__init__":
+        #     for t in toks[3:toks.index(RIGHTCURL)]:
+        #         __init += t
 
-        if toks[1] == "__init__":
-            for t in toks[3:toks.index(RIGHTCURL)]:
-                __init += t
+        # print(__init)
 
-        print(__init)
-
-        toks = toks[toks.index(RIGHTCURL)+1:-1]
+        # toks = toks[toks.index(RIGHTCURL)+1:-1]
 
         # for idx, i in enumerate(toks):
         #     if i.startswith(DOT):
         #         toks[idx] = "self->" + i[1:]
 
 
-        print(toks)
+        # print(toks)
         
-        self._vars_dict["CLASSES"].update(class_dict)
+        # self._vars_dict["CLASSES"].update(class_dict)
 
 
     def __func(self, current_func, toks):
