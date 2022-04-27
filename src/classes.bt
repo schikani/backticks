@@ -1,4 +1,4 @@
-< class Person(< name: str, @ age: int)
+< class Person(< name[]: str, @ age: int)
 {
     __init__
     {
