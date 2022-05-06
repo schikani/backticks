@@ -1,0 +1,20 @@
+< class Person(< name: str) #<- Hello, Apple
+{
+    __init__
+    {
+    }
+    
+    @ set_name(name: str)
+    {
+        .name = name;
+    }
+
+    < get_name(): str
+    {
+        return .name;
+    }
+}
+
+# let person1 = Person(`Shivang`, 25);
+
+# person1.set_name(`asdsa`);

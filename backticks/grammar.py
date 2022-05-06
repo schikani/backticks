@@ -8,6 +8,7 @@ class BT_Grammar(Tokenizer):
     def __init__(self, bt_file_path):
         super().__init__(bt_file_path)
         self._vars_dict = dict()
+        self._class_vars_dict = dict()
         self._imports_dict = dict()
         self._global_vars_list = []
         self._private_func_list = []
@@ -45,6 +46,11 @@ class BT_Grammar(Tokenizer):
         '''
         self._vars_dict["GLOBALS"] = {"global_vars": {}}
         self._vars_dict["FUNCS"] = {}
+
+        # self._class_vars_dict["GLOBALS"] = {"global_vars": {}}
+        # self._class_vars_dict["FUNCS"] = {}
+        self._class_structs = []
+
         # self._vars_dict["INBUILT_FUNCS"] = {}
         # self._vars_dict["INBUILT_FUNCS"][f"input_{self.bin_name}"] = [("", STR), {"var1": ["", STR]}]
 
@@ -664,6 +670,7 @@ class BT_Grammar(Tokenizer):
         _li_assign_idx = ""
         _dynamic_list = False
         _func_ret_list = False
+        _class_found = False
         _list_len = ""
         _sub_type = ""
         
@@ -750,9 +757,16 @@ class BT_Grammar(Tokenizer):
                 elif self._in_func_names(tok_list[2]):
                     tok_list[2] = self._in_func_names(tok_list[2])
                     # print(tok_list[2])
+                
+                elif self._in_class_names(tok_list[2]):
+                    _class_found = True
+                    tok_list[2] = self._in_class_names(tok_list[2])
+                    val = tok_list[2] + "__init__()"
+                    _type = tok_list[2]
+                    # print(_type)
                     
 
-                if _type != STR:
+                elif _type != STR:
                     # print(tok_list[2:])
                     val, _type = self.__eval_assign_values(
                         vars_dict, tok_list[2:], _global_call, SEMI)
@@ -807,28 +821,24 @@ class BT_Grammar(Tokenizer):
                 else:
                     vars_dict[var].append(False)
 
+
+            if _global_call:
+
+                if not _dynamic_list and not _list_len and not _func_ret_list and not _class_found:
+                    self._global_vars_list.append(f"{_type} {var}")
+
+                elif _dynamic_list:
+                    self._global_vars_list.append(f"{_type}_list_t *{var}")
+                
+                elif _func_ret_list:
+                    self._global_vars_list.append(f"{_func_ret_list} *{var}")
+                
+                elif _class_found:
+                    self._global_vars_list.append(f"{_type} *{var}")
+
             
-
-            # if _type == STR:
-            #     _type = CHARSTAR
-
-
-            # print(var, val, _type)
-
-            # if _type.endswith("_list_t"):
-            #     _type = _type[:_type.find("_list_t")]
-
-            if _global_call and not _dynamic_list and not _list_len and not _func_ret_list:
-                self._global_vars_list.append(f"{_type} {var}")
-
-            elif _global_call and _dynamic_list:
-                self._global_vars_list.append(f"{_type}_list_t *{var}")
-            
-            elif _global_call and _func_ret_list:
-                self._global_vars_list.append(f"{_func_ret_list} *{var}")
-            
-            elif _global_call:
-                self._global_vars_list.append(f"{_type} {var}")
+            # elif _global_call:
+            #     self._global_vars_list.append(f"{_type} {var}")
 
 
             if _global_call:
@@ -1075,26 +1085,51 @@ class BT_Grammar(Tokenizer):
         if name + "_" + self.bin_name in self._vars_dict["FUNCS"]:
             return name + "_" + self.bin_name
         return False
+
+    def _in_class_names(self, name):
+        if name + "_" + self.bin_name in self._class_vars_dict:
+            return name + "_" + self.bin_name
+        return False
     
     def __class(self, toks):
 
-        inherited_classes = []
         class_type = toks[0]
-        class_name = CLASS + "_" + toks[2]
+
+
+        class_name = toks[2] + "_" + self.bin_name
+        class_struct_str = ""
+        class_init_str = ""
+
+        
+        self._class_vars_dict[class_name] = {
+            "FUNCS":{},
+            "GLOBALS": {
+                "global_vars": {}
+            },
+            "INHERITED_CLASSES": []
+        }
+
 
         __init = ""
 
-        if class_type == PUB_FUNC:
-            print("PUBLIC")
-        elif class_type == FUNCTION:
-            print("PRIVATE")
+        # if class_type == PUB_FUNC:
+        #     print("PUBLIC")
+        # elif class_type == FUNCTION:
+        #     print("PRIVATE")
         
-        end_param_idx = toks.index(LEFTCURL)-1
+        end_param_idx = toks.index(RIGHTBRACK)
         param_toks = toks[4:end_param_idx]
         # print(param_toks)
+
+        
+
+            # param_toks = param_toks[end_param_idx:]
+            
+
         count = 0
         param_list = False
-        class_vars = dict()
+
+        # Get the class global variables
         while count < len(param_toks):
             if param_toks[count] == PUB_FUNC or param_toks[count] == FUNCTION:
                 var_type = param_toks[count]
@@ -1126,40 +1161,103 @@ class BT_Grammar(Tokenizer):
                     param_list = False
                     _type += "_list_t"
 
-                class_vars[var] = [val, _type, _sub_t]
+                class_struct_str += f"{_type} {var};\n"
+                self._class_vars_dict[class_name]["GLOBALS"]["global_vars"]["self->"+var] = [val, _type, _sub_t]
                 # print(var_type, var, val, _type, _sub_t)
 
             count += 1
-        
-        # Continue after extracting param variables
-        toks = toks[end_param_idx + 2:]
-        # print(toks)
 
-        if toks[0] == "__init__":
-            count = 2
-            while count < len(toks):
-                if toks[count] == RIGHTCURL and (toks[count+1] == PUB_FUNC or toks[count+1] == FUNCTION):
+        inh_classes = end_param_idx
+        multiple_classes = False
+
+        # print(toks[inh_classes:])
+
+        if toks[inh_classes+1] != LEFTCURL:
+            inh_classes += 1
+            while inh_classes < len(toks):
+                if toks[inh_classes] == "<" and toks[inh_classes+1] == "-":
+                    inh_classes += 2
+                    self._class_vars_dict[class_name]["INHERITED_CLASSES"].append(toks[inh_classes]+"_"+self.bin_name)
+                elif toks[inh_classes] == COMA:
+                    inh_classes += 1
+                    multiple_classes = True
+                
+                if multiple_classes:
+                    multiple_classes = False
+                    self._class_vars_dict[class_name]["INHERITED_CLASSES"].append(toks[inh_classes]+"_"+self.bin_name)
+
+                
+                if toks[inh_classes] == LEFTCURL and (toks[inh_classes+1] == "__init__" or\
+                    toks[inh_classes+1] == PUB_FUNC or toks[inh_classes+1] == FUNCTION):
                     break
-                if toks[count+1] != RIGHTCURL:
-                    __init += toks[count] + SPACE
-                else:
-                    __init += toks[count]
-                count += 1
+            
 
-        # print(__init)  
-        #       
-        # All Functions
-        toks = toks[count+1:-1]
-        print(toks)
+                inh_classes += 1
+
+            inh_classes += 1
+
+            end_param_idx = inh_classes
+
+            # print(toks[end_param_idx:])
+            toks = toks[end_param_idx:]
+            # toks.insert(0, FUNCTION)
+            end_param_idx += 1
+
+
+            # print(toks)
+        else:
+            toks = toks[end_param_idx + 2:]
+        # print(toks)
+        # count = 0
+        # init_found = False
+        # if toks[0] == "__init__":
+        #     init_found = True
+
+        #     # count = 2
+        #     # while count < len(toks):
+        #     #     if toks[count] == RIGHTCURL and (toks[count+1] == PUB_FUNC or toks[count+1] == FUNCTION):
+        #     #         break
+        #     #     if toks[count+1] != RIGHTCURL:
+        #     #         __init += toks[count] + SPACE
+        #     #     else:
+        #     #         __init += toks[count]
+        #     #     count += 1
+        #     # count += 1 
+
+        # # print(__init)  
+        # #       
+
+        # # All Functions
+        # toks = toks[count:-1]
+        # print(toks)
         count = 0
         closing = 0
-        class_funcs = []
-        class_func_decl = ""
         start = 0
+        functions = []
+        init_found = False
         while count < len(toks):
 
-            if toks[count] == PUB_FUNC or toks[count] == FUNCTION:
+            if toks[count] == "__init__":
+                init_found = True
+                toks.insert(count+1, LEFTBRACK)
+                toks.insert(count+2, RIGHTBRACK)
+                toks.insert(count+3, COLON)
+                toks.insert(count+4, class_name+" *")
+
+
+                _p_toks_idx = count+1
+                for i in param_toks:
+                    if i not in [FUNCTION, PUB_FUNC]:
+                        toks.insert(_p_toks_idx, i)
+                    _p_toks_idx += 1
                 start = count
+                
+                
+            elif toks[count] == PUB_FUNC or toks[count] == FUNCTION:
+                start = count
+
+            elif toks[count].startswith(DOT):
+                toks[count] = "self->" + toks[count].split(DOT)[1]
 
             elif toks[count] == LEFTCURL:
                 closing += 1
@@ -1168,32 +1266,118 @@ class BT_Grammar(Tokenizer):
                 closing -= 1
 
                 if closing == 0:
+                    if not init_found:
+                        _func = toks[start:count+1]
+                        func_name = class_name + "_"+_func[1] + "_" + self.bin_name
+                        functions.append((_func[1], _func))
+                        self._class_vars_dict[class_name]["FUNCS"][_func[1]] = [(), {}]
+                        self._class_vars_dict[class_name]["FUNCS"][_func[1]][1].update(self._class_vars_dict[class_name]["GLOBALS"]["global_vars"])
+                    else:
+                        init_found = False
+                        _func = toks[start:count+1]
+                        # _func.insert(0, "__init__")
+                        func_name = class_name + "__init__"
+                        functions.append((func_name, _func))
+                        self._class_vars_dict[class_name]["FUNCS"][func_name] = [(), {}]
+                        self._class_vars_dict[class_name]["FUNCS"][func_name][1].update(self._class_vars_dict[class_name]["GLOBALS"]["global_vars"])
 
-                    func_name = class_name + "_"+toks[start:count+1][1] + "_" + self.bin_name
-                    if toks[start:count+1][0] == FUNCTION:
+
+
+                    if _func[0] == FUNCTION:
                         func_name = "__" + func_name
-                    print(func_name)
-                    self._vars_dict["FUNCS"][func_name] = [(), {}]
-                    self.__func(func_name, toks[start:count+1], class_name)
+                    
+                    
+    
+                    # class_struct_str += f"{_type} {var};\n"
+
 
             count += 1
-        
-        print(class_funcs)
-    
+        # print(toks)
+        print(functions)
+        class_vars_str = ""
+        class_init_vars_str = ""
+
+        for index, i in enumerate(self._class_vars_dict[class_name]["GLOBALS"]["global_vars"]):
+            var_dict = self._class_vars_dict[class_name]["GLOBALS"]["global_vars"][i]
+            if index < len(self._class_vars_dict[class_name]["GLOBALS"]["global_vars"]) - 1:
+                class_vars_str += f"{var_dict[1]} {i[i.rfind('>')+1:]}, "
+            elif index == len(self._class_vars_dict[class_name]["GLOBALS"]["global_vars"]) - 1:
+                class_vars_str += f"{var_dict[1]} {i[i.rfind('>')+1:]}"
+            
+            # Type of global variable
+            if var_dict[1] != STR and var_dict[2] != "__LIST__":
+                class_init_vars_str += f"{i} = {i[i.rfind('>')+1:]};\n"
+            
+            elif var_dict[1] == STR and var_dict[2] != "__LIST__":
+                class_init_vars_str += new_str(i, i[i.rfind('>')+1:])
+            
+            # elif var_dict[1] != STR and var_dict[2] == "__LIST__":
+            #     class_init_vars_str += new_list()
+
+
+        class_init_str += f"{class_name} *{class_name}__init__({class_vars_str})\n" + LEFTCURL + NEWLINE
+
+        if class_type == FUNCTION:
+            self._private_func_list.append(f"{class_name} *{class_name}__init__({class_vars_str});")
+        elif class_type == PUB_FUNC:
+            self._public_func_list.append(f"{class_name} *{class_name}__init__({class_vars_str});")
+
+        class_init_str += f"{class_name} *self = calloc(1, sizeof({class_name}));\n"
+        class_init_str += class_init_vars_str
+
+        for f in functions:
+            # class_struct_str += self.__func(f[0], f[1], class_name)
+            if f[1][0] == "__init__":
+                self.__func(f[0], f[1], class_name)
+                
+            if f[1][0] == FUNCTION:
+                class_struct_str += self.__func(f[0], f[1], class_name)
+                class_init_str += f"self->{f[0]} = __{class_name}_{f[0]};\n"
+            elif f[1][0] == PUB_FUNC:
+                class_struct_str += self.__func(f[0], f[1], class_name)
+                class_init_str += f"self->{f[0]} = {class_name}_{f[0]};\n"
+
+        class_init_str += "return self;\n"
+        class_init_str += RIGHTCURL + NEWLINE
+
+        class_struct_str = f"""typedef struct {class_name}
+{{
+{class_struct_str}
+}}{class_name};
+"""     
+
+        self._funcs_impl.append(class_init_str)
+
+        self._class_structs.append(class_struct_str)
+
+        # print(class_struct_str)
 
 
     def __func(self, current_func, toks, class_name=None):
 
         c_func_params = ""
         return_list = False
+        # print(toks)
+
+        # func_dict = self._class_vars_dict["FUNCS"]
+
+        class_struct_str = ""
 
         if not class_name:
             current_func += "_" + self.bin_name
+            func_dict = self._vars_dict["FUNCS"]
+        
+        else:
+            func_dict = self._class_vars_dict[class_name]["FUNCS"]
 
-        if not current_func in self._vars_dict["FUNCS"] or class_name:
+        if not current_func in func_dict or class_name:
             func_type = toks[0]
+
             if not class_name:
-                self._vars_dict["FUNCS"].update({current_func: [(), {}]})
+                func_dict.update({current_func: [(), {}]})
+            
+            # print(toks)
+
             prms_and_ret = toks[toks.index(LEFTBRACK): toks.index(LEFTCURL)]
             params = prms_and_ret[prms_and_ret.index(
                 LEFTBRACK)+1: prms_and_ret.index(RIGHTBRACK)]
@@ -1228,8 +1412,13 @@ class BT_Grammar(Tokenizer):
             if return_list:
                 return_type += "_list_t"
 
+            if not current_func.endswith("__init__"):
+                class_struct_str += f"{return_type} (*{current_func})(struct {class_name} *self"
+            else:
+                class_struct_str += f"{return_type} (*{current_func})("
+
             # func_type can be `@` or `<`
-            self._vars_dict["FUNCS"][current_func][0] = [ret_val, return_type, _sub_type, func_type]
+            func_dict[current_func][0] = [ret_val, return_type, _sub_type, func_type]
 
             if params and params[0] != ":":
                 # Extract param vars and types and skip if no params
@@ -1261,7 +1450,8 @@ class BT_Grammar(Tokenizer):
                         param_list = False
                         _type += "_list_t"
 
-                    self._vars_dict["FUNCS"][current_func][1][var] = (val, _type, _sub_t)
+                    class_struct_str += f", {_type} {var}"
+                    func_dict[current_func][1][var] = (val, _type, _sub_t)
 
                     # if _type == STR:
                     #     _type = CHARSTAR
@@ -1274,8 +1464,13 @@ class BT_Grammar(Tokenizer):
 
                     # To exclude comma after last param
                     if _idx < len(params) - 3:
+                        class_struct_str += ", "
                         c_func_params += ", "
                     _idx += 4
+                
+            class_struct_str += ");\n"
+            
+            # print(class_struct_str)
 
             start = 0
             sub_toks = []
@@ -1285,16 +1480,16 @@ class BT_Grammar(Tokenizer):
 
                 if func_body_toks[start] in [IF, ELIF, ELSE]:
                     str_to_ret += self.__if_elif_else(
-                        self._vars_dict["FUNCS"][current_func][1], func_body_toks[start:], _global_call=False)
+                        func_dict[current_func][1], func_body_toks[start:], _global_call=False)
                     break
 
                 elif func_body_toks[start] == LOOP:
                     str_to_ret += self.__loop_until_for(
-                        self._vars_dict["FUNCS"][current_func][1], func_body_toks[start:], _global_call=False)
+                        func_dict[current_func][1], func_body_toks[start:], _global_call=False)
                     break
 
                 elif func_body_toks[start] == FOR:
-                    str_to_ret += self.__for(self._vars_dict["FUNCS"][current_func][1], func_body_toks[start:], _global_call=False)
+                    str_to_ret += self.__for(func_dict[current_func][1], func_body_toks[start:], _global_call=False)
                     break
 
                 elif func_body_toks[start] != SEMI:
@@ -1306,7 +1501,7 @@ class BT_Grammar(Tokenizer):
 
                     sub_toks.append(func_body_toks[start])
                     str_to_ret += self._convert_to_c_str(
-                        [sub_toks], self._vars_dict["FUNCS"][current_func][1], _global_call=False)
+                        [sub_toks], func_dict[current_func][1], _global_call=False)
 
                     sub_toks.clear()
 
@@ -1324,15 +1519,30 @@ class BT_Grammar(Tokenizer):
                 return_type += "*"
 
             if class_name:
+                if func_type == FUNCTION:
+                    current_func = f"__{class_name}_{current_func}"
+                
+                elif func_type == PUB_FUNC:
+                    current_func = f"{class_name}_{current_func}"
+
+
                 if c_func_params:
-                    c_func_params = f"struct {class_name}_{self.bin_name} *self, {c_func_params}"
+                    if not current_func.endswith("__init__"):
+                        c_func_params = f"struct {class_name} *self, {c_func_params}"
+                    else:
+                        c_func_params = f"{c_func_params}"
+
                 else:
-                    c_func_params = f"struct {class_name}_{self.bin_name} *self"
+                    if not current_func.endswith("__init__"): 
+                        c_func_params = f"struct {class_name} *self"
+                    # else:
+                        # c_func_params = f"struct {class_name} *self"
+
 
             func = f"{return_type} {current_func}({c_func_params})" + \
                 NEWLINE + LEFTCURL + NEWLINE
 
-            func += str_to_ret + RIGHTCURL + NEWLINE
+            func += str_to_ret + NEWLINE + RIGHTCURL + NEWLINE
 
             self._funcs_impl.append(func)
 
@@ -1344,12 +1554,8 @@ class BT_Grammar(Tokenizer):
                 self._public_func_list.append(
                     f"{return_type} {current_func}({c_func_params});")
             
-
-#             self._public_func_list.append(f"""typedef struct class_{class_name}_{self.bin_name}
-# {{
-# {return_type} (*{current_func})({c_func_params});    
-# }}{class_name}_{self.bin_name};
-# """)
+        if class_name:
+            return class_struct_str
 
     def __return(self, vars_dict, tok_list):
 

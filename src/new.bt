@@ -1,0 +1,6 @@
+@ add(numbers[100]: int): int
+{
+    return add_list(numbers);
+}
+
+printl(`{add(12, 45, 78, 89, 78, 56, 78)}`);

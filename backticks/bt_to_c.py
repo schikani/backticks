@@ -20,7 +20,7 @@ class BT_to_C(BT_Grammar):
             make_builtins_source()
 
         make_source(self.c_file_name, self._private_func_list, self._funcs_impl, self._convert_to_c_str(self.tokens, self._vars_dict["GLOBALS"]["global_vars"]), 0, main_file)
-        make_header(self.h_file_name, self._public_func_list, self._global_vars_list, main_file, self._includes)
+        make_header(self.h_file_name, self._public_func_list, self._global_vars_list, self._class_structs, main_file, self._includes)
         
     
     def compile(self, compiler_path, del_c_h_files=False):

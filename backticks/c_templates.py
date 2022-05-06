@@ -140,18 +140,22 @@ void check_reserve_{t}_list({t}_list_t *arr)
         s_write.write(source)
 
 
-def make_header(header_file_name, funcs_list, global_vars_list, main_file=True, includes=[]):
+def make_header(header_file_name, funcs_list, global_vars_list, structs, main_file=True, includes=[]):
 
     funcs = ""
     global_vars = ""
     file_main_func = ""
     _includes = ""
+    _class_structs = ""
 
     if not main_file:
         file_main_func = "int main_"+header_file_name[:header_file_name.index(".h")] + "(int argc, char *argv[]);"
 
     for inc in includes:
         _includes += inc + NEWLINE
+
+    for struct in structs:
+        _class_structs +=struct
 
     for var in global_vars_list:
         global_vars += var + SEMI + NEWLINE
@@ -174,12 +178,14 @@ f"""
 
 {_includes}
 
+{_class_structs}
+
 typedef struct
 {{
 {global_vars}
 }} {header_f_n}VARS;
-
 extern {header_f_n}VARS {_struct_name};
+
 
 {funcs}
 {file_main_func}
