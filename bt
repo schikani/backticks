@@ -3,26 +3,27 @@
 
 import sys
 import pprint
+from os.path import exists, basename
+
 # Add backticks to path
 # sys.path.append("../")
+
 from backticks import BT_to_C
 
 
 py_file_name = sys.argv[0]
 bt_file_path = sys.argv[1]
-
-
-# while bt_file_name.find("/"):
 args = sys.argv[2:]
 
-
 source = BT_to_C(bt_file_path)
+
 if len(args):
+    dpcf = False
+    if args.count("--dpcf"):
+        dpcf = True
+
     if args.count("build"):
-        if args.count("del_c"):
-            source.compile("gcc", True)
-        else:
-            source.compile("gcc", False)
+        source.check_and_compile(dpcf)
 
     if args.count("run"):
         source.run()
@@ -34,11 +35,8 @@ if len(args):
 # print("FUNCS\n")
 # pprint.pprint(source._vars_dict["FUNCS"])
 # print("\n\n")
-
-print("CLASSES\n")
-pprint.pprint(source._class_vars_dict)
-
-# pprint.pprint(source._class_structs)
+# print("CLASSES\n")
+# pprint.pprint(source._class_vars_dict)
 
 
 # pprint.pprint(source.tokens)

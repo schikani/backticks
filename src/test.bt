@@ -1,15 +1,7 @@
-let num1 = 45;
-let num2 = 67.53;
-
-printl(`num1+num2 = [num1+num2]`);
-
-let line = `*`;
-let char_count = 0;
-
-printl(`Before:\t[line]`);
-loop until char_count < 30 
+@ add_num(a: float, b: float): float
 {
-    line += `*`;
-    char_count += 1;
+    printl(`{a * b + a / b}`);
+    return a + b;
 }
-printl(`After:\t[line]`);
+
+add_num(134, 42);

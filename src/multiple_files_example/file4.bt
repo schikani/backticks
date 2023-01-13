@@ -16,8 +16,8 @@ let file_name = `file4.bt`;
 }
 
 printl(`
-    Hello from [f1.get_info()]! | ID = [f1.get_id()]
-    Hello from [f2.get_info()]! | ID = [f2.get_id()]
-    Hello from [f3.file_name]! | ID = [f3.id]
-    Hello from [file_name]! | ID = [get_id()]
+    Hello from {f1.get_info()}! | ID = {f1.get_id()}
+    Hello from {f2.get_info()}! | ID = {f2.get_id()}
+    Hello from {f3.file_name}! | ID = {f3.id}
+    Hello from {file_name}! | ID = {get_id()}
 `);

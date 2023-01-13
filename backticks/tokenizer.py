@@ -18,11 +18,11 @@ class Tokenizer(Lexer):
         #     print(f"Total Lines: {self.current_line_no}")
             
         
-    def __read_sc_file(self):
+    def __read_bt_file(self):
         
-        with open(self.bt_file_path, "r") as sc_read:
-            sc = sc_read.read()
-            sc += "\n"
+        with open(self.bt_file_path, "r") as bt_read:
+            bt = bt_read.read()
+            bt += "\n"
 
             self.bt_file_name = self.bt_file_path[self.bt_file_path.rfind("/")+1:]
         
@@ -30,14 +30,14 @@ class Tokenizer(Lexer):
             self.c_file_name = self.bin_name + ".c"
             self.h_file_name = self.bin_name + ".h"
 
-            return sc
+            return bt
 
     
     def _tokenizer(self, buf=None):
         from_file = False
         if buf == None:
             from_file = True
-            buf = self.__read_sc_file()
+            buf = self.__read_bt_file()
         
 
         length = len(buf)

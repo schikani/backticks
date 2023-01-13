@@ -1,20 +1,28 @@
-< class Person(< name: str) #<- Hello, Apple
+< class Person(< name: str)
 {
-    __init__
-    {
-    }
-    
-    @ set_name(name: str)
+    @ set_name(name: str): int[]
     {
         .name = name;
+        return [0, 0];
     }
 
     < get_name(): str
     {
         return .name;
     }
+
+    # < get_num(): float
+    # {
+    #     return 0.9;
+    # }
 }
 
-# let person1 = Person(`Shivang`, 25);
+let person1 = Person(`xyz`);
+printl(`~~~~{person1.get_name()}~~~~`);
+person1.set_name(`abc`);
+printl(`~~~~{person1.get_name()}~~~~`);
 
-# person1.set_name(`asdsa`);
+let person2 = Person(`Shivang`);
+printl(`~~~~{person2.get_name()}~~~~`);
+person2.set_name(`Bhagya`);
+printl(`~~~~{person2.get_name()}~~~~`);

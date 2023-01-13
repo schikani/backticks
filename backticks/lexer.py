@@ -91,6 +91,13 @@ class Lexer:
 
         elif string[0] == TICK and len(string) > 1 and string[-1] == TICK:
             return True
+        
+        # String list
+        # print(string)
+        elif string[0] == LEFTSQUARE:
+            if len(string) > 1:
+                if string[1] == TICK and string[-2] == TICK:
+                    return True
 
         return False
 

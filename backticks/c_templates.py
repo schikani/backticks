@@ -60,7 +60,7 @@ str _bt_input(FILE *in);
 
     header += "#endif\n"
 
-    with open("./C/_bt_builtins_.h", "w") as h_write:
+    with open("./pcf/_bt_builtins_.h", "w") as h_write:
         h_write.write(header)
 
 def make_builtins_source():
@@ -136,7 +136,7 @@ void check_reserve_{t}_list({t}_list_t *arr)
 }}
 
 """
-    with open("./C/_bt_builtins_.c", "w") as s_write:
+    with open("./pcf/_bt_builtins_.c", "w") as s_write:
         s_write.write(source)
 
 
@@ -155,7 +155,7 @@ def make_header(header_file_name, funcs_list, global_vars_list, structs, main_fi
         _includes += inc + NEWLINE
 
     for struct in structs:
-        _class_structs +=struct
+        _class_structs += struct + "\n"
 
     for var in global_vars_list:
         global_vars += var + SEMI + NEWLINE
@@ -179,7 +179,6 @@ f"""
 {_includes}
 
 {_class_structs}
-
 typedef struct
 {{
 {global_vars}
@@ -193,7 +192,7 @@ extern {header_f_n}VARS {_struct_name};
 #endif
 """
 
-    with open(f"./C/{header_file_name}", "w") as bt_h:
+    with open(f"./pcf/{header_file_name}", "w") as bt_h:
         bt_h.write(header)
 
 def make_source(src_file_name, func_defs, funcs_list, main_body, _return, main_file=True):
@@ -228,5 +227,5 @@ return {_return};
 }}
 """
 
-    with open(f"./C/{src_file_name}", "w") as bt_src:
+    with open(f"./pcf/{src_file_name}", "w") as bt_src:
         bt_src.write(source_c)

@@ -41,7 +41,6 @@ def new_list(_type, var, _list, _reserve=None, _func=False):
 def append_list(_type, var, vals_list):
     str_to_ret = ""
     _list_len = len(vals_list)
-
     if _type != STR:
         for i in range(_list_len):
             str_to_ret += f"check_reserve_{_type}_list({var});\n"
@@ -67,7 +66,7 @@ def access_elem_by_ref(_type, _k, _v, _list_name, for_body, _start=None, _end=No
         _end = f"{_list_name}->len"
         _list_name += "->ptr"
     
-    # print(_type)
+    # print(_type, _list_name)
 
     str_to_ret = f"""for (size_t {_k} = {_start}; {_k} < {_end}; ++{_k}) {{{_type} {_v} = {_list_name}[{_k}];
 {for_body}}}\n"""

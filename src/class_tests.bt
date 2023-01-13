@@ -1,0 +1,65 @@
+# < class Globe(< galaxy: str)
+# {
+#     @ set_galaxy(name: str)
+#     {
+#         .galaxy = name;
+#     }
+
+#     < get_galaxy(): str
+#     {
+#         return .galaxy;
+#     }
+
+# }
+
+< class Person(< name: str, < num: int)
+{
+    @ set_name(name: str)
+    {
+        .name = name;
+    }
+
+    < get_name(): str
+    {
+        return .name;
+    }
+
+    @ set_num(num: int)
+    {
+        .num = num;
+    }
+
+    < get_num(): int
+    {
+        return .num;
+    }
+
+    # @ list_test(array[]: str)
+    # {
+    #     for l in array
+    #     {
+    #         # printl(`[{idx}] {l}`);
+    #         printl(l);
+    #     }
+    # }
+}
+
+let array[] = [`Shivang`, `Rucha`, `Bhagya`];
+
+
+
+let person1 = Person(`xyz`, 879887);
+# person1.list_test(array);
+# printl(``);
+# array <- `Yatha`, `Dev`;
+# person1.list_test(array);
+
+
+printl(`{person1.get_num()}`);
+person1.set_num(878052);
+printl(`{person1.get_num()}`);
+printl(`{person1.get_name()}`);
+person1.set_name(`Shivang`);
+printl(`{person1.get_name()}`);
+
+

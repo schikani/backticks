@@ -1,0 +1,19 @@
+@ list_test(array[]: str)
+{
+    for l in array
+    {
+        # printl(`[{idx}] {l}`);
+        printl(l);
+    }
+}
+
+let array[] = [`Shivang`, `Rucha`, `Bhagya`];
+# let array[] = [0.1, 0.78, 0.99];
+list_test(array);
+printl(``);
+# TODO
+# array <- `4 5 a,s aa,6`, `asd asd as d`;
+array <- `Yatha`, `Dev`;
+list_test(array);
+
+
